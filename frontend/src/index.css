@@ -1,21 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+:root {
+  /* Modern Gradient Colors */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --gradient-danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  --gradient-info: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  --gradient-dark: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+
+  /* Neon Colors */
+  --neon-cyan: #00f5ff;
+  --neon-purple: #b24bf3;
+  --neon-pink: #ff10f0;
+  --neon-green: #39ff14;
+  --neon-orange: #ff6600;
+  --neon-blue: #4d4dff;
+
+  /* Background */
+  --bg-primary: #0a0e27;
+  --bg-secondary: #151932;
+  --bg-tertiary: #1e2139;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #b8c5d6;
+  --text-muted: #7a8ba3;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0d1117;
-  color: #c9d1d9;
+  background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(181, 23, 158, 0.1) 0%, transparent 50%),
+              linear-gradient(180deg, #0a0e27 0%, #1a1f3a 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  overflow-x: hidden;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 #root {
@@ -29,127 +72,461 @@ code {
 }
 
 ::-webkit-scrollbar-track {
-  background: #161b22;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #30363d;
-  border-radius: 4px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
 }
 
-/* Ant Design overrides */
-.ant-layout {
-  background: #0d1117;
+/* Glassmorphism Card */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ant-layout-header {
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.ant-layout-content {
-  background: #0d1117;
+/* Gradient Card */
+.gradient-card {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
 }
 
-.ant-card {
-  background: #161b22;
-  border-color: #30363d;
+.gradient-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
-.ant-card-head {
-  border-bottom-color: #30363d;
-  color: #c9d1d9;
+.gradient-card:hover::before {
+  opacity: 1;
 }
 
-.ant-table {
-  background: #161b22;
+/* Neon Text */
+.neon-text {
+  text-shadow: 0 0 10px currentColor,
+               0 0 20px currentColor,
+               0 0 30px currentColor;
 }
 
-.ant-table-thead > tr > th {
-  background: #161b22;
-  border-bottom-color: #30363d;
-  color: #c9d1d9;
+/* Stat Card */
+.stat-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.ant-table-tbody > tr > td {
-  border-bottom-color: #30363d;
-  color: #c9d1d9;
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
 }
 
-.ant-table-tbody > tr:hover > td {
-  background: #1c2128 !important;
+.stat-card:hover::after {
+  transform: translateX(100%);
 }
 
-.ant-statistic-title {
-  color: #8b949e;
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.ant-statistic-content {
-  color: #c9d1d9;
+/* Modern Table */
+.modern-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
 }
 
-.ant-tabs-tab {
-  color: #8b949e;
+.modern-table thead th {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 16px;
+  text-align: left;
+  border: none;
 }
 
-.ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: #58a6ff !important;
+.modern-table tbody tr {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.ant-tabs-ink-bar {
-  background: #58a6ff;
+.modern-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(4px);
 }
 
-.ant-select-selector {
-  background: #0d1117 !important;
-  border-color: #30363d !important;
-  color: #c9d1d9 !important;
+.modern-table tbody td {
+  padding: 16px;
+  border: none;
+  color: var(--text-primary);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.ant-picker {
-  background: #0d1117 !important;
-  border-color: #30363d !important;
+.modern-table tbody tr td:first-child {
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
 }
 
-.ant-picker input {
-  color: #c9d1d9 !important;
+.modern-table tbody tr td:last-child {
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
-.ant-modal-content {
-  background: #161b22;
+/* Modern Button */
+.modern-button {
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px 0 rgba(0, 245, 255, 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
-.ant-modal-header {
-  background: #161b22;
-  border-bottom-color: #30363d;
+.modern-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
 }
 
-.ant-modal-title {
-  color: #c9d1d9;
+.modern-button:hover::before {
+  left: 100%;
 }
 
-.ant-checkbox-wrapper {
-  color: #c9d1d9;
+.modern-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(0, 245, 255, 0.4);
 }
 
-.ant-empty-description {
-  color: #8b949e;
+.modern-button:active {
+  transform: translateY(0);
 }
 
-/* HeatMap styles */
-.w-heatmap text {
-  fill: #fff !important;
-  font-size: 10px;
+/* Modern Input */
+.modern-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s ease;
+  outline: none;
 }
 
-.w-heatmap-month text {
-  fill: #fff !important;
+.modern-input:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.w-heatmap-week text {
-  fill: #fff !important;
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+
+.badge-success {
+  background: rgba(57, 255, 20, 0.15);
+  color: var(--neon-green);
+  border: 1px solid rgba(57, 255, 20, 0.3);
+}
+
+.badge-warning {
+  background: rgba(255, 102, 0, 0.15);
+  color: var(--neon-orange);
+  border: 1px solid rgba(255, 102, 0, 0.3);
+}
+
+.badge-info {
+  background: rgba(0, 245, 255, 0.15);
+  color: var(--neon-cyan);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--neon-cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Utilities */
+.text-gradient {
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-pink {
+  background: linear-gradient(135deg, var(--neon-pink), var(--neon-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+/* Custom DatePicker Styles - Minimalist Design */
+.react-datepicker {
+  background: transparent !important;
+  border: none !important;
+  font-family: 'Inter', sans-serif !important;
+  display: flex !important;
+  gap: 20px !important;
+}
+
+.react-datepicker__month-container {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+}
+
+.react-datepicker__header {
+  background: transparent !important;
+  border: none !important;
+  padding-top: 8px !important;
+}
+
+.react-datepicker__current-month {
+  color: #fff !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  margin-bottom: 16px !important;
+}
+
+.react-datepicker__day-names {
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.react-datepicker__day-name {
+  color: var(--text-secondary) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  width: 36px !important;
+  line-height: 36px !important;
+}
+
+.react-datepicker__day {
+  color: #555 !important;
+  width: 36px !important;
+  line-height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  margin: 2px !important;
+}
+
+/* Days with data - slightly highlighted */
+.react-datepicker__day.has-data-day {
+  color: #fff !important;
+  background: rgba(0, 245, 255, 0.08) !important;
+}
+
+.react-datepicker__day.has-data-day:hover {
+  background: rgba(0, 245, 255, 0.15) !important;
+  color: #00f5ff !important;
+}
+
+/* Days without data - disabled look */
+.react-datepicker__day.no-data-day {
+  color: #333 !important;
+  background: transparent !important;
+  cursor: not-allowed !important;
+  opacity: 0.3 !important;
+}
+
+.react-datepicker__day.no-data-day:hover {
+  background: transparent !important;
+  color: #333 !important;
+}
+
+/* Selected range - bright cyan */
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  background: #00f5ff !important;
+  color: #0a0e27 !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+
+.react-datepicker__day--range-start,
+.react-datepicker__day--range-end {
+  background: #00f5ff !important;
+  color: #0a0e27 !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background: rgba(0, 245, 255, 0.2) !important;
+  border-radius: 8px !important;
+}
+
+.react-datepicker__day--disabled {
+  color: #333 !important;
+  cursor: not-allowed !important;
+  opacity: 0.3 !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: #333 !important;
+  opacity: 0.2 !important;
+}
+
+.react-datepicker__day--today {
+  font-weight: 700 !important;
+  color: #fff !important;
+  border: 2px solid #00f5ff !important;
+}
+
+.react-datepicker__navigation {
+  top: 16px !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #00f5ff !important;
+  border-width: 2px 2px 0 0 !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #fff !important;
+}
+
+.react-datepicker__week {
+  display: flex !important;
+  justify-content: space-around !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
 }

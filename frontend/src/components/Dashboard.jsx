@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Row, Col, Statistic, Table, Spin, Empty } from 'antd'
-import { DownloadOutlined, UploadOutlined, LaptopOutlined, SwapOutlined } from '@ant-design/icons'
+import { motion } from 'framer-motion'
+import { Download, Upload, Laptop, Activity, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { formatBytes, formatNumber } from '../utils/format'
 
@@ -29,17 +29,21 @@ function Dashboard({ dateRange }) {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <div className="spinner" />
       </div>
     )
   }
 
   if (!summary) {
-    return <Empty description="No data available" />
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-muted)' }}>
+        <Activity size={64} style={{ marginBottom: '20px', opacity: 0.3 }} />
+        <p>No data available</p>
+      </div>
+    )
   }
 
-  // Агрегация по устройствам
   const deviceStats = {}
   summary.days.forEach((day) => {
     if (day.devices) {
@@ -65,121 +69,274 @@ function Dashboard({ dateRange }) {
     .slice(0, 10)
 
   const topDevicesChart = topDevices.map((d) => ({
-    name: d.friendly_name,
+    name: d.friendly_name.length > 15 ? d.friendly_name.substring(0, 15) + '...' : d.friendly_name,
     Downloaded: d.downloaded,
     Uploaded: d.uploaded,
   }))
 
-  const columns = [
+  const statCards = [
     {
-      title: 'Device',
-      dataIndex: 'friendly_name',
-      key: 'friendly_name',
-      render: (text) => <strong>{text}</strong>,
+      title: 'Total Downloaded',
+      value: formatBytes(summary.total_downloaded),
+      icon: Download,
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      color: '#00f2fe',
     },
     {
-      title: 'IP',
-      dataIndex: 'ip',
-      key: 'ip',
+      title: 'Total Uploaded',
+      value: formatBytes(summary.total_uploaded),
+      icon: Upload,
+      gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      color: '#fa709a',
     },
     {
-      title: 'Downloaded',
-      dataIndex: 'downloaded',
-      key: 'downloaded',
-      render: (bytes) => <span style={{ color: '#52c41a' }}>{formatBytes(bytes)}</span>,
-      sorter: (a, b) => a.downloaded - b.downloaded,
+      title: 'Total Devices',
+      value: Object.keys(deviceStats).length,
+      icon: Laptop,
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: '#667eea',
     },
     {
-      title: 'Uploaded',
-      dataIndex: 'uploaded',
-      key: 'uploaded',
-      render: (bytes) => <span style={{ color: '#fa8c16' }}>{formatBytes(bytes)}</span>,
-      sorter: (a, b) => a.uploaded - b.uploaded,
+      title: 'Total Traffic',
+      value: formatBytes(summary.total_downloaded + summary.total_uploaded),
+      icon: TrendingUp,
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      color: '#f5576c',
     },
   ]
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const item = {
+    hidden: { y: 20, opacity: 0 },
+    show: { y: 0, opacity: 1 }
+  }
+
   return (
     <div>
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Card>
-            <Statistic
-              title={<span style={{ fontSize: 20 }}>Total Downloaded</span>}
-              value={formatBytes(summary.total_downloaded)}
-              prefix={<DownloadOutlined style={{ fontSize: 32 }} />}
-              valueStyle={{ color: '#52c41a', fontSize: 48, fontWeight: 'bold' }}
-            />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card>
-            <Statistic
-              title={<span style={{ fontSize: 20 }}>Total Uploaded</span>}
-              value={formatBytes(summary.total_uploaded)}
-              prefix={<UploadOutlined style={{ fontSize: 32 }} />}
-              valueStyle={{ color: '#fa8c16', fontSize: 48, fontWeight: 'bold' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* Stat Cards */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '24px',
+          marginBottom: '40px',
+        }}
+      >
+        {statCards.map((card, index) => {
+          const Icon = card.icon
+          return (
+            <motion.div
+              key={index}
+              variants={item}
+              whileHover={{ scale: 1.02, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className="stat-card"
+              style={{
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{
+                position: 'absolute',
+                top: -50,
+                right: -50,
+                width: 150,
+                height: 150,
+                background: card.gradient,
+                borderRadius: '50%',
+                opacity: 0.1,
+                filter: 'blur(40px)',
+              }} />
 
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Total Devices"
-              value={Object.keys(deviceStats).length}
-              prefix={<LaptopOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Days in Range"
-              value={summary.days.length}
-              valueStyle={{ color: '#722ed1' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Total Traffic"
-              value={formatBytes(summary.total_downloaded + summary.total_uploaded)}
-              prefix={<SwapOutlined />}
-              valueStyle={{ color: '#13c2c2' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '12px',
+                }}>
+                  <span style={{
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    fontWeight: '500',
+                  }}>
+                    {card.title}
+                  </span>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    background: `${card.color}15`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Icon size={20} color={card.color} />
+                  </div>
+                </div>
 
-      <Card title="Top 10 Devices by Downloaded Traffic" style={{ marginBottom: 24 }}>
+                <div style={{
+                  fontSize: '32px',
+                  fontWeight: '800',
+                  background: card.gradient,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
+                  {card.value}
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
+      </motion.div>
+
+      {/* Top Devices Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="glass-card"
+        style={{ marginBottom: '40px' }}
+      >
+        <h3 style={{
+          marginBottom: '24px',
+          fontSize: '20px',
+          fontWeight: '700',
+          background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}>
+          Top 10 Devices by Traffic
+        </h3>
+
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={topDevicesChart}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-            <XAxis dataKey="name" stroke="#8b949e" />
-            <YAxis stroke="#8b949e" tickFormatter={(value) => formatBytes(value)} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}
-              formatter={(value) => formatBytes(value)}
+            <defs>
+              <linearGradient id="downloadGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00f2fe" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#4facfe" stopOpacity={0.3} />
+              </linearGradient>
+              <linearGradient id="uploadGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#fee140" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#fa709a" stopOpacity={0.3} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+            <XAxis
+              dataKey="name"
+              stroke="var(--text-secondary)"
+              fontSize={12}
+              angle={-45}
+              textAnchor="end"
+              height={100}
             />
-            <Legend />
-            <Bar dataKey="Downloaded" fill="#52c41a" />
-            <Bar dataKey="Uploaded" fill="#fa8c16" />
+            <YAxis
+              stroke="var(--text-secondary)"
+              fontSize={12}
+              tickFormatter={(value) => formatBytes(value)}
+            />
+            <Tooltip
+              contentStyle={{
+                background: 'rgba(10, 14, 39, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '12px',
+              }}
+              formatter={(value) => formatBytes(value)}
+              labelStyle={{ color: '#fff', marginBottom: '8px' }}
+            />
+            <Legend
+              wrapperStyle={{ paddingTop: '20px' }}
+              iconType="circle"
+            />
+            <Bar dataKey="Downloaded" fill="url(#downloadGradient)" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="Uploaded" fill="url(#uploadGradient)" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </Card>
+      </motion.div>
 
-      <Card title="All Devices">
-        <Table
-          columns={columns}
-          dataSource={topDevices}
-          rowKey="mac"
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
+      {/* All Devices Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="glass-card"
+      >
+        <h3 style={{
+          marginBottom: '24px',
+          fontSize: '20px',
+          fontWeight: '700',
+          background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}>
+          All Devices
+        </h3>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>Downloaded</th>
+                <th>Uploaded</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topDevices.map((device, index) => (
+                <motion.tr
+                  key={device.mac}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.05 }}
+                >
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                      }} />
+                      <strong>{device.friendly_name}</strong>
+                    </div>
+                  </td>
+                  <td>
+                    <code style={{ fontSize: '13px' }}>{device.ip}</code>
+                  </td>
+                  <td>
+                    <span className="badge badge-success">
+                      {formatBytes(device.downloaded)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="badge badge-warning">
+                      {formatBytes(device.uploaded)}
+                    </span>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   )
 }

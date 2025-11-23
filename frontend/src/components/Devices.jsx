@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Table, Tag, Spin, Empty, Modal, Row, Col, Statistic, Divider, Typography } from 'antd'
-import { DownloadOutlined, UploadOutlined } from '@ant-design/icons'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Laptop, Download, Upload, Activity, X, Wifi } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts'
 import { formatBytes, formatNumber } from '../utils/format'
 
-const { Title, Text } = Typography
-
-const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16', '#a0d911', '#2f54eb']
+const COLORS = ['#00f2fe', '#4facfe', '#fee140', '#fa709a', '#667eea', '#764ba2', '#f093fb', '#f5576c', '#39ff14', '#ff10f0']
 
 function Devices({ dateRange }) {
   const [loading, setLoading] = useState(true)
@@ -18,7 +16,6 @@ function Devices({ dateRange }) {
   const [availableDates, setAvailableDates] = useState([])
 
   useEffect(() => {
-    // Загружаем доступные даты при первом рендере
     fetch('/api/calendar')
       .then(res => res.json())
       .then(data => {
@@ -40,7 +37,6 @@ function Devices({ dateRange }) {
       const response = await fetch(`/api/summary?from=${from}&to=${to}`)
       const data = await response.json()
 
-      // Агрегация по устройствам
       const deviceStats = {}
       data.days.forEach((day) => {
         if (day.devices) {
@@ -78,15 +74,12 @@ function Devices({ dateRange }) {
   const fetchProtocols = async (mac) => {
     setProtocolsLoading(true)
     try {
-      // Фильтруем только доступные даты в выбранном диапазоне
       const startDate = dateRange[0].format('YYYY-MM-DD')
       const endDate = dateRange[1].format('YYYY-MM-DD')
-
       const datesToFetch = availableDates.filter(date => date >= startDate && date <= endDate)
 
       const protocolMap = {}
 
-      // Делаем запросы только для дат с данными
       for (const dateStr of datesToFetch) {
         try {
           const response = await fetch(`/api/device/${dateStr}/${mac}`)
@@ -108,7 +101,7 @@ function Devices({ dateRange }) {
             }
           }
         } catch (err) {
-          // Продолжаем для следующей даты
+          // Continue
         }
       }
 
@@ -122,136 +115,35 @@ function Devices({ dateRange }) {
     }
   }
 
-  const handleRowClick = async (record) => {
-    setSelectedDevice(record)
+  const handleRowClick = async (device) => {
+    setSelectedDevice(device)
     setModalVisible(true)
-    await fetchProtocols(record.mac)
+    await fetchProtocols(device.mac)
   }
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" />
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
+        <div className="spinner" />
       </div>
     )
   }
 
   if (!devices || devices.length === 0) {
-    return <Empty description="No devices found" />
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text-muted)' }}>
+        <Laptop size={64} style={{ marginBottom: '20px', opacity: 0.3 }} />
+        <p>No devices found</p>
+      </div>
+    )
   }
 
-  const columns = [
-    {
-      title: 'Device',
-      dataIndex: 'friendly_name',
-      key: 'friendly_name',
-      render: (text) => <strong>{text}</strong>,
-      sorter: (a, b) => a.friendly_name.localeCompare(b.friendly_name),
-    },
-    {
-      title: 'MAC Address',
-      dataIndex: 'mac',
-      key: 'mac',
-      render: (mac) => <code style={{ fontSize: 12 }}>{mac}</code>,
-    },
-    {
-      title: 'IP',
-      dataIndex: 'ip',
-      key: 'ip',
-    },
-    {
-      title: 'Downloaded',
-      dataIndex: 'downloaded',
-      key: 'downloaded',
-      render: (bytes) => (
-        <Tag color="success" icon={<DownloadOutlined />}>
-          {formatBytes(bytes)}
-        </Tag>
-      ),
-      sorter: (a, b) => a.downloaded - b.downloaded,
-      defaultSortOrder: 'descend',
-    },
-    {
-      title: 'Uploaded',
-      dataIndex: 'uploaded',
-      key: 'uploaded',
-      render: (bytes) => (
-        <Tag color="warning" icon={<UploadOutlined />}>
-          {formatBytes(bytes)}
-        </Tag>
-      ),
-      sorter: (a, b) => a.uploaded - b.uploaded,
-    },
-    {
-      title: 'Packets ↓',
-      dataIndex: 'rx_packets',
-      key: 'rx_packets',
-      render: (pkts) => formatNumber(pkts),
-      sorter: (a, b) => a.rx_packets - b.rx_packets,
-    },
-    {
-      title: 'Packets ↑',
-      dataIndex: 'tx_packets',
-      key: 'tx_packets',
-      render: (pkts) => formatNumber(pkts),
-      sorter: (a, b) => a.tx_packets - b.tx_packets,
-    },
-    {
-      title: 'Connections',
-      dataIndex: 'connections',
-      key: 'connections',
-      render: (conns) => formatNumber(conns),
-      sorter: (a, b) => a.connections - b.connections,
-    },
-  ]
-
-  const protocolColumns = [
-    {
-      title: 'Protocol',
-      dataIndex: 'protocol',
-      key: 'protocol',
-      render: (proto) => <Tag color="blue">{proto}</Tag>,
-    },
-    {
-      title: 'Port',
-      dataIndex: 'port',
-      key: 'port',
-    },
-    {
-      title: 'Download',
-      dataIndex: 'downloaded',
-      key: 'downloaded',
-      render: (bytes) => <span style={{ color: '#52c41a' }}>{formatBytes(bytes)}</span>,
-      sorter: (a, b) => a.downloaded - b.downloaded,
-    },
-    {
-      title: 'Upload',
-      dataIndex: 'uploaded',
-      key: 'uploaded',
-      render: (bytes) => <span style={{ color: '#fa8c16' }}>{formatBytes(bytes)}</span>,
-      sorter: (a, b) => a.uploaded - b.uploaded,
-    },
-    {
-      title: 'Packets',
-      key: 'packets',
-      render: (record) => formatNumber(record.rx_packets + record.tx_packets),
-    },
-    {
-      title: 'Connections',
-      dataIndex: 'connections',
-      key: 'connections',
-      render: (conns) => formatNumber(conns),
-    },
-  ]
-
-  // Данные для Pie Chart
-  const pieData = protocols.slice(0, 7).map((p, idx) => ({
+  const pieData = protocols.slice(0, 8).map((p, idx) => ({
     name: `${p.protocol}${p.port ? ':' + p.port : ''}`,
     value: p.downloaded + p.uploaded,
   }))
 
-  // Данные для Bar Chart
-  const barData = protocols.slice(0, 7).map((p) => ({
+  const barData = protocols.slice(0, 8).map((p) => ({
     name: `${p.protocol}${p.port ? ':' + p.port : ''}`,
     Download: p.downloaded,
     Upload: p.uploaded,
@@ -259,91 +151,247 @@ function Devices({ dateRange }) {
 
   return (
     <div>
-      <Card title="Devices">
-        <Table
-          columns={columns}
-          dataSource={devices}
-          rowKey="mac"
-          pagination={{ pageSize: 20 }}
-          onRow={(record) => ({
-            onClick: () => handleRowClick(record),
-            style: { cursor: 'pointer' },
-          })}
-        />
-      </Card>
-
-      <Modal
-        title={null}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        width={1200}
-        footer={null}
-        styles={{
-          body: { padding: 0 }
-        }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card"
       >
-        {selectedDevice && (
-          <div style={{ padding: 24 }}>
-            {/* Header */}
-            <div style={{ marginBottom: 24 }}>
-              <Title level={3} style={{ margin: 0 }}>
-                Device: {selectedDevice.friendly_name}
-              </Title>
-              <Text type="secondary">
-                IP Address: {selectedDevice.ip}
-              </Text>
-            </div>
+        <h3 style={{
+          marginBottom: '24px',
+          fontSize: '24px',
+          fontWeight: '700',
+          background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}>
+          All Devices
+        </h3>
 
-            {/* Statistics */}
-            <Row gutter={16} style={{ marginBottom: 24 }}>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="Total Download"
-                    value={formatBytes(selectedDevice.downloaded)}
-                    valueStyle={{ color: '#52c41a', fontSize: 20 }}
-                  />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="Total Upload"
-                    value={formatBytes(selectedDevice.uploaded)}
-                    valueStyle={{ color: '#fa8c16', fontSize: 20 }}
-                  />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="Total Connections"
-                    value={formatNumber(selectedDevice.connections)}
-                    valueStyle={{ fontSize: 20 }}
-                  />
-                </Card>
-              </Col>
-              <Col span={6}>
-                <Card size="small">
-                  <Statistic
-                    title="Total Packets"
-                    value={formatNumber(selectedDevice.rx_packets + selectedDevice.tx_packets)}
-                    valueStyle={{ fontSize: 20 }}
-                  />
-                </Card>
-              </Col>
-            </Row>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="modern-table">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>MAC / IP</th>
+                <th>Downloaded</th>
+                <th>Uploaded</th>
+                <th>Packets</th>
+                <th>Connections</th>
+              </tr>
+            </thead>
+            <tbody>
+              {devices.map((device, index) => (
+                <motion.tr
+                  key={device.mac}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => handleRowClick(device)}
+                >
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <Laptop size={20} color="#fff" />
+                      </div>
+                      <strong>{device.friendly_name}</strong>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <code style={{ fontSize: '11px', opacity: 0.7 }}>{device.mac}</code>
+                      <div style={{ fontSize: '13px', marginTop: '2px' }}>{device.ip}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="badge badge-success">
+                      <Download size={12} style={{ marginRight: '4px' }} />
+                      {formatBytes(device.downloaded)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="badge badge-warning">
+                      <Upload size={12} style={{ marginRight: '4px' }} />
+                      {formatBytes(device.uploaded)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="badge badge-info">
+                      {formatNumber(device.rx_packets + device.tx_packets)}
+                    </span>
+                  </td>
+                  <td>{formatNumber(device.connections)}</td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
 
-            {protocolsLoading ? (
-              <div style={{ textAlign: 'center', padding: '50px 0' }}>
-                <Spin size="large" />
+      {/* Modal */}
+      <AnimatePresence>
+        {modalVisible && selectedDevice && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(10px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '20px',
+            }}
+            onClick={() => setModalVisible(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 50 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass-card"
+              style={{
+                maxWidth: '1200px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                position: 'relative',
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+                paddingBottom: '20px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Wifi size={32} color="#fff" />
+                  </div>
+                  <div>
+                    <h2 style={{
+                      fontSize: '28px',
+                      fontWeight: '800',
+                      background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      marginBottom: '6px',
+                    }}>
+                      {selectedDevice.friendly_name}
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+                      {selectedDevice.ip} • {selectedDevice.mac}
+                    </p>
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setModalVisible(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#fff',
+                  }}
+                >
+                  <X size={20} />
+                </motion.button>
               </div>
-            ) : protocols.length > 0 ? (
-              <>
-                {/* Charts */}
-                <Row gutter={24} style={{ marginBottom: 24 }}>
-                  <Col span={12}>
-                    <Card title="Traffic by Protocol" size="small">
+
+              {/* Stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
+                marginBottom: '32px',
+              }}>
+                {[
+                  { label: 'Downloaded', value: formatBytes(selectedDevice.downloaded), icon: Download, gradient: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
+                  { label: 'Uploaded', value: formatBytes(selectedDevice.uploaded), icon: Upload, gradient: 'linear-gradient(135deg, #fa709a, #fee140)' },
+                  { label: 'Connections', value: formatNumber(selectedDevice.connections), icon: Activity, gradient: 'linear-gradient(135deg, #667eea, #764ba2)' },
+                  { label: 'Packets', value: formatNumber(selectedDevice.rx_packets + selectedDevice.tx_packets), icon: Activity, gradient: 'linear-gradient(135deg, #f093fb, #f5576c)' },
+                ].map((stat, i) => {
+                  const Icon = stat.icon
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="stat-card"
+                      style={{ textAlign: 'center' }}
+                    >
+                      <Icon size={24} color="#00f5ff" style={{ marginBottom: '8px' }} />
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                        {stat.label}
+                      </div>
+                      <div style={{
+                        fontSize: '20px',
+                        fontWeight: '700',
+                        background: stat.gradient,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                      }}>
+                        {stat.value}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+
+              {protocolsLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+                  <div className="spinner" />
+                </div>
+              ) : protocols.length > 0 ? (
+                <>
+                  {/* Charts */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                    gap: '24px',
+                    marginBottom: '32px',
+                  }}>
+                    <div className="gradient-card">
+                      <h4 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: '600' }}>
+                        Traffic by Protocol
+                      </h4>
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
@@ -351,8 +399,8 @@ function Devices({ dateRange }) {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ name, percent }) => percent > 0.05 ? `${name} (${(percent * 100).toFixed(1)}%)` : ''}
-                            outerRadius={80}
+                            label={({ name, percent }) => percent > 0.05 ? `${name} (${(percent * 100).toFixed(0)}%)` : ''}
+                            outerRadius={90}
                             fill="#8884d8"
                             dataKey="value"
                           >
@@ -360,52 +408,125 @@ function Devices({ dateRange }) {
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <RechartsTooltip formatter={(value) => formatBytes(value)} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </Card>
-                  </Col>
-                  <Col span={12}>
-                    <Card title="Download vs Upload by Protocol" size="small">
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={barData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                          <XAxis dataKey="name" stroke="#8b949e" angle={-45} textAnchor="end" height={80} />
-                          <YAxis stroke="#8b949e" tickFormatter={(value) => formatBytes(value)} />
                           <RechartsTooltip
-                            contentStyle={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}
+                            contentStyle={{
+                              background: 'rgba(10, 14, 39, 0.95)',
+                              backdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '12px',
+                            }}
                             formatter={(value) => formatBytes(value)}
                           />
-                          <Legend />
-                          <Bar dataKey="Download" fill="#52c41a" />
-                          <Bar dataKey="Upload" fill="#fa8c16" />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    <div className="gradient-card">
+                      <h4 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: '600' }}>
+                        Download vs Upload
+                      </h4>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={barData}>
+                          <defs>
+                            <linearGradient id="barDownload" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#00f2fe" stopOpacity={0.8} />
+                              <stop offset="100%" stopColor="#4facfe" stopOpacity={0.3} />
+                            </linearGradient>
+                            <linearGradient id="barUpload" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#fee140" stopOpacity={0.8} />
+                              <stop offset="100%" stopColor="#fa709a" stopOpacity={0.3} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                          <XAxis
+                            dataKey="name"
+                            stroke="var(--text-secondary)"
+                            fontSize={11}
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                          />
+                          <YAxis
+                            stroke="var(--text-secondary)"
+                            fontSize={11}
+                            tickFormatter={(value) => formatBytes(value)}
+                          />
+                          <RechartsTooltip
+                            contentStyle={{
+                              background: 'rgba(10, 14, 39, 0.95)',
+                              backdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '12px',
+                            }}
+                            formatter={(value) => formatBytes(value)}
+                          />
+                          <Legend iconType="circle" />
+                          <Bar dataKey="Download" fill="url(#barDownload)" radius={[8, 8, 0, 0]} />
+                          <Bar dataKey="Upload" fill="url(#barUpload)" radius={[8, 8, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
-                    </Card>
-                  </Col>
-                </Row>
+                    </div>
+                  </div>
 
-                <Divider />
+                  {/* Protocol Table */}
+                  <div>
+                    <h4 style={{
+                      marginBottom: '16px',
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}>
+                      Protocol Details
+                    </h4>
 
-                {/* Protocol Details Table */}
-                <div>
-                  <Title level={5} style={{ marginBottom: 16 }}>Protocol Details</Title>
-                  <Table
-                    columns={protocolColumns}
-                    dataSource={protocols}
-                    rowKey={(record) => `${record.protocol}:${record.port}`}
-                    pagination={{ pageSize: 10 }}
-                    size="small"
-                  />
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="modern-table">
+                        <thead>
+                          <tr>
+                            <th>Protocol</th>
+                            <th>Port</th>
+                            <th>Download</th>
+                            <th>Upload</th>
+                            <th>Packets</th>
+                            <th>Connections</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {protocols.slice(0, 10).map((proto, i) => (
+                            <motion.tr
+                              key={i}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ delay: i * 0.05 }}
+                            >
+                              <td>
+                                <span className="badge badge-info">{proto.protocol}</span>
+                              </td>
+                              <td>{proto.port}</td>
+                              <td>{formatBytes(proto.downloaded)}</td>
+                              <td>{formatBytes(proto.uploaded)}</td>
+                              <td>{formatNumber(proto.rx_packets + proto.tx_packets)}</td>
+                              <td>{formatNumber(proto.connections)}</td>
+                            </motion.tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
+                  <Activity size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
+                  <p>No protocol data available</p>
                 </div>
-              </>
-            ) : (
-              <Empty description="No protocol data available" />
-            )}
-          </div>
+              )}
+            </motion.div>
+          </motion.div>
         )}
-      </Modal>
+      </AnimatePresence>
     </div>
   )
 }
