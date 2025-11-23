@@ -13,11 +13,30 @@ Modern web application for monitoring and visualizing network traffic from nlbwm
 
 ## Screenshots
 
-- **Dashboard**: Overview with total statistics and top devices
-- **Activity Matrix**: GitHub-style heatmap showing traffic patterns
-- **Devices**: Detailed per-device breakdown with protocol analysis
-- **Charts**: Time-series graphs with device filtering
-- **Comparison**: Compare traffic between different time periods
+### Dashboard
+Overview with total statistics and top devices
+
+![Dashboard](.github/screenshots/dashboard.png)
+
+### Activity Matrix
+GitHub-style heatmap showing traffic patterns
+
+![Activity Matrix](.github/screenshots/activity.png)
+
+### Devices
+Detailed per-device breakdown with protocol analysis
+
+![Devices](.github/screenshots/devices.png)
+
+### Charts
+Time-series graphs with device filtering
+
+![Charts](.github/screenshots/charts.png)
+
+### Comparison
+Compare traffic between different time periods
+
+![Comparison](.github/screenshots/compare.png)
 
 ## Requirements
 
