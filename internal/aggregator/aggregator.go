@@ -251,14 +251,15 @@ func (a *Aggregator) aggregateDayData(date string, data *converter.TrafficData) 
 
 func (a *Aggregator) aggregateDeviceProtocols(mac string, data *converter.TrafficData) []ProtocolStats {
 	protoMap := make(map[string]*ProtocolStats)
+	normalizedMAC := strings.ToLower(mac)
 
 	for _, row := range data.Data {
 		if len(row) < 11 {
 			continue
 		}
 
-		rowMac := row[3].(string)
-		if rowMac != mac {
+		rowMac := strings.ToLower(row[3].(string))
+		if rowMac != normalizedMAC {
 			continue
 		}
 
@@ -301,11 +302,11 @@ func (a *Aggregator) filterByDevices(dayData *DayStats, macs []string) *DayStats
 
 	macSet := make(map[string]bool)
 	for _, mac := range macs {
-		macSet[mac] = true
+		macSet[strings.ToLower(mac)] = true
 	}
 
 	for mac, device := range dayData.Devices {
-		if macSet[mac] {
+		if macSet[strings.ToLower(mac)] {
 			filtered.Downloaded += device.Downloaded
 			filtered.Uploaded += device.Uploaded
 			filtered.Devices[mac] = device

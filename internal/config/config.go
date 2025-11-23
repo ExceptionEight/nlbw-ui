@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -62,6 +63,9 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to resolve data_dir path: %w", err)
 	}
 
+	// Normalize MAC addresses in friendly_names to lowercase
+	cfg.normalizeMACAddresses()
+
 	return &cfg, nil
 }
 
@@ -93,8 +97,23 @@ func (c *Config) validate() error {
 }
 
 func (c *Config) GetFriendlyName(mac string) string {
-	if name, ok := c.FriendlyNames[mac]; ok {
+	// Normalize MAC address to lowercase for case-insensitive lookup
+	normalizedMAC := strings.ToLower(mac)
+	if name, ok := c.FriendlyNames[normalizedMAC]; ok {
 		return name
 	}
 	return mac
+}
+
+// normalizeMACAddresses converts all MAC address keys in FriendlyNames to lowercase
+func (c *Config) normalizeMACAddresses() {
+	if c.FriendlyNames == nil {
+		return
+	}
+
+	normalized := make(map[string]string, len(c.FriendlyNames))
+	for mac, name := range c.FriendlyNames {
+		normalized[strings.ToLower(mac)] = name
+	}
+	c.FriendlyNames = normalized
 }
