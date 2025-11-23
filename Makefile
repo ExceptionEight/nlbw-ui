@@ -49,10 +49,10 @@ clean:
 release-all: frontend
 	@echo "Building for all platforms..."
 	@mkdir -p dist
-	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-windows-amd64.exe .
-	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-windows-arm64.exe .
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-linux-amd64 .
-	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-linux-arm64 .
-	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-darwin-amd64 .
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-darwin-arm64 .
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-windows-amd64.exe .
+	CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-windows-arm64.exe .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-linux-amd64 .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-linux-arm64 .
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-darwin-amd64 .
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-darwin-arm64 .
 	@echo "Build complete! Binaries are in ./dist/"
