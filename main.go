@@ -19,11 +19,13 @@ import (
 var frontendFS embed.FS
 
 func main() {
-	// Определяем флаг --demo
+	// Определяем флаги
+	configPath := flag.String("config", "config.yaml", "Path to config file")
+	flag.StringVar(configPath, "c", "config.yaml", "Path to config file (shorthand)")
 	demoFlag := flag.String("demo", "", "Generate demo data for date range (format: DD.MM.YYYY-DD.MM.YYYY)")
 	flag.Parse()
 
-	cfg, err := config.Load("config.yaml")
+	cfg, err := config.Load(*configPath)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
