@@ -1,16 +1,17 @@
-.PHONY: all frontend backend build clean run dev install help
+.PHONY: all frontend backend build clean run dev install help release-all
 
 all: build
 
 help:
 	@echo "Available targets:"
-	@echo "  make install  - Install frontend dependencies"
-	@echo "  make frontend - Build frontend (React + Vite)"
-	@echo "  make backend  - Build backend (Go server)"
-	@echo "  make build    - Build both frontend and backend"
-	@echo "  make run      - Run the server"
-	@echo "  make dev      - Run frontend in dev mode"
-	@echo "  make clean    - Clean build artifacts"
+	@echo "  make install     - Install frontend dependencies"
+	@echo "  make frontend    - Build frontend (React + Vite)"
+	@echo "  make backend     - Build backend (Go server)"
+	@echo "  make build       - Build both frontend and backend"
+	@echo "  make run         - Run the server"
+	@echo "  make dev         - Run frontend in dev mode"
+	@echo "  make clean       - Clean build artifacts"
+	@echo "  make release-all - Build for all platforms (Windows, Linux, macOS)"
 
 install:
 	@echo "Installing frontend dependencies..."
@@ -42,4 +43,16 @@ clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf frontend/dist/*
 	rm -f nlbw-ui
+	rm -f nlbw-ui-*
 	@echo "Clean complete!"
+
+release-all: frontend
+	@echo "Building for all platforms..."
+	@mkdir -p dist
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-windows-amd64.exe .
+	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-windows-arm64.exe .
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-linux-amd64 .
+	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-linux-arm64 .
+	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/nlbw-ui-darwin-amd64 .
+	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/nlbw-ui-darwin-arm64 .
+	@echo "Build complete! Binaries are in ./dist/"
