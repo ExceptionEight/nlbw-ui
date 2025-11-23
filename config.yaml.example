@@ -1,0 +1,21 @@
+# NLBW-UI Configuration Example
+# Copy this file to config.yaml and adjust settings as needed
+
+# Directory containing nlbwmon *.db.gz files
+data_dir: ./data
+
+# How often to scan for new/modified files (5s, 10s, 1m, 5m, etc.)
+scan_interval: 10s
+
+# Web server bind address (0.0.0.0 = all interfaces, 127.0.0.1 = localhost only)
+server_address: 0.0.0.0
+
+# Web server port
+server_port: 8080
+
+# Optional: Map MAC addresses to friendly device names
+# This makes it easier to identify devices in the UI
+friendly_names:
+  "4a:bd:24:cf:07:5d": "iPhone 13"
+  "bc:24:11:72:be:55": "MacBook Pro"
+  "ea:fa:e9:d2:67:f4": "iPad Air"

@@ -1,0 +1,38 @@
+# Binaries
+nlbw-ui
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Config (but keep example)
+config.yaml
+!config.yaml.example
+
+# Data files
+data/*.db.gz
+
+# Frontend
+frontend/node_modules/
+frontend/dist/*
+!frontend/dist/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build/

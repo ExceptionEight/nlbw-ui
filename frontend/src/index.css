@@ -1,0 +1,155 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #161b22;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* Ant Design overrides */
+.ant-layout {
+  background: #0d1117;
+}
+
+.ant-layout-header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+.ant-layout-content {
+  background: #0d1117;
+}
+
+.ant-card {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+.ant-card-head {
+  border-bottom-color: #30363d;
+  color: #c9d1d9;
+}
+
+.ant-table {
+  background: #161b22;
+}
+
+.ant-table-thead > tr > th {
+  background: #161b22;
+  border-bottom-color: #30363d;
+  color: #c9d1d9;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom-color: #30363d;
+  color: #c9d1d9;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: #1c2128 !important;
+}
+
+.ant-statistic-title {
+  color: #8b949e;
+}
+
+.ant-statistic-content {
+  color: #c9d1d9;
+}
+
+.ant-tabs-tab {
+  color: #8b949e;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #58a6ff !important;
+}
+
+.ant-tabs-ink-bar {
+  background: #58a6ff;
+}
+
+.ant-select-selector {
+  background: #0d1117 !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+
+.ant-picker {
+  background: #0d1117 !important;
+  border-color: #30363d !important;
+}
+
+.ant-picker input {
+  color: #c9d1d9 !important;
+}
+
+.ant-modal-content {
+  background: #161b22;
+}
+
+.ant-modal-header {
+  background: #161b22;
+  border-bottom-color: #30363d;
+}
+
+.ant-modal-title {
+  color: #c9d1d9;
+}
+
+.ant-checkbox-wrapper {
+  color: #c9d1d9;
+}
+
+.ant-empty-description {
+  color: #8b949e;
+}
+
+/* HeatMap styles */
+.w-heatmap text {
+  fill: #fff !important;
+  font-size: 10px;
+}
+
+.w-heatmap-month text {
+  fill: #fff !important;
+}
+
+.w-heatmap-week text {
+  fill: #fff !important;
+}
