@@ -41,8 +41,10 @@ type DayStats struct {
 }
 
 type CalendarDay struct {
-	Date  string `json:"date"`
-	Value uint64 `json:"value"` // total traffic
+	Date       string `json:"date"`
+	Value      uint64 `json:"value"`      // total traffic
+	Downloaded uint64 `json:"downloaded"` // rx bytes
+	Uploaded   uint64 `json:"uploaded"`   // tx bytes
 }
 
 type Aggregator struct {
@@ -76,11 +78,14 @@ func (a *Aggregator) GetCalendarData() []CalendarDay {
 
 	for path, data := range allData {
 		date := a.ExtractDateFromFilename(path)
-		total := a.calculateTotalTraffic(data)
+		downloaded, uploaded := a.calculateTrafficSplit(data)
+		total := downloaded + uploaded
 
 		result = append(result, CalendarDay{
-			Date:  date,
-			Value: total,
+			Date:       date,
+			Value:      total,
+			Downloaded: downloaded,
+			Uploaded:   uploaded,
 		})
 	}
 
@@ -194,18 +199,23 @@ func (a *Aggregator) GetTimeseries(from, to string, macs []string) []DayStats {
 }
 
 func (a *Aggregator) calculateTotalTraffic(data *converter.TrafficData) uint64 {
-	var total uint64
+	downloaded, uploaded := a.calculateTrafficSplit(data)
+	return downloaded + uploaded
+}
+
+func (a *Aggregator) calculateTrafficSplit(data *converter.TrafficData) (uint64, uint64) {
+	var downloaded, uploaded uint64
 	for _, row := range data.Data {
-		if len(row) > 6 {
+		if len(row) > 8 {
 			if rxBytes, ok := row[6].(uint64); ok {
-				total += rxBytes
+				downloaded += rxBytes
 			}
 			if txBytes, ok := row[8].(uint64); ok {
-				total += txBytes
+				uploaded += txBytes
 			}
 		}
 	}
-	return total
+	return downloaded, uploaded
 }
 
 func (a *Aggregator) aggregateDayData(date string, data *converter.TrafficData) *DayStats {

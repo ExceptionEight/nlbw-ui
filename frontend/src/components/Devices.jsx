@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Laptop, Download, Upload, Activity, X, Wifi } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts'
 import { formatBytes, formatNumber } from '../utils/format'
+import { useIsMobile } from '../App'
 
 const COLORS = ['#00f2fe', '#4facfe', '#fee140', '#fa709a', '#667eea', '#764ba2', '#f093fb', '#f5576c', '#39ff14', '#ff10f0']
 
 function Devices({ dateRange }) {
+  const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
   const [devices, setDevices] = useState([])
   const [selectedDevice, setSelectedDevice] = useState(null)
@@ -157,8 +159,8 @@ function Devices({ dateRange }) {
         className="glass-card"
       >
         <h3 style={{
-          marginBottom: '24px',
-          fontSize: '24px',
+          marginBottom: isMobile ? '16px' : '24px',
+          fontSize: isMobile ? '18px' : '24px',
           fontWeight: '700',
           background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
           WebkitBackgroundClip: 'text',
@@ -173,11 +175,11 @@ function Devices({ dateRange }) {
             <thead>
               <tr>
                 <th>Device</th>
-                <th>MAC / IP</th>
+                {!isMobile && <th>MAC / IP</th>}
                 <th>Downloaded</th>
                 <th>Uploaded</th>
-                <th>Packets</th>
-                <th>Connections</th>
+                {!isMobile && <th>Packets</th>}
+                {!isMobile && <th>Connections</th>}
               </tr>
             </thead>
             <tbody>
@@ -190,45 +192,54 @@ function Devices({ dateRange }) {
                   onClick={() => handleRowClick(device)}
                 >
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                       <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '12px',
+                        width: isMobile ? '32px' : '40px',
+                        height: isMobile ? '32px' : '40px',
+                        borderRadius: isMobile ? '8px' : '12px',
                         background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        flexShrink: 0,
                       }}>
-                        <Laptop size={20} color="#fff" />
+                        <Laptop size={isMobile ? 16 : 20} color="#fff" />
                       </div>
-                      <strong>{device.friendly_name}</strong>
+                      <strong style={{ fontSize: isMobile ? '13px' : 'inherit' }}>
+                        {isMobile && device.friendly_name.length > 10
+                          ? device.friendly_name.substring(0, 10) + '...'
+                          : device.friendly_name}
+                      </strong>
                     </div>
                   </td>
-                  <td>
-                    <div>
-                      <code style={{ fontSize: '11px', opacity: 0.7 }}>{device.mac}</code>
-                      <div style={{ fontSize: '13px', marginTop: '2px' }}>{device.ip}</div>
-                    </div>
-                  </td>
+                  {!isMobile && (
+                    <td>
+                      <div>
+                        <code style={{ fontSize: '11px', opacity: 0.7 }}>{device.mac}</code>
+                        <div style={{ fontSize: '13px', marginTop: '2px' }}>{device.ip}</div>
+                      </div>
+                    </td>
+                  )}
                   <td>
                     <span className="badge badge-success">
-                      <Download size={12} style={{ marginRight: '4px' }} />
+                      {!isMobile && <Download size={12} style={{ marginRight: '4px' }} />}
                       {formatBytes(device.downloaded)}
                     </span>
                   </td>
                   <td>
                     <span className="badge badge-warning">
-                      <Upload size={12} style={{ marginRight: '4px' }} />
+                      {!isMobile && <Upload size={12} style={{ marginRight: '4px' }} />}
                       {formatBytes(device.uploaded)}
                     </span>
                   </td>
-                  <td>
-                    <span className="badge badge-info">
-                      {formatNumber(device.rx_packets + device.tx_packets)}
-                    </span>
-                  </td>
-                  <td>{formatNumber(device.connections)}</td>
+                  {!isMobile && (
+                    <td>
+                      <span className="badge badge-info">
+                        {formatNumber(device.rx_packets + device.tx_packets)}
+                      </span>
+                    </td>
+                  )}
+                  {!isMobile && <td>{formatNumber(device.connections)}</td>}
                 </motion.tr>
               ))}
             </tbody>
@@ -266,11 +277,13 @@ function Devices({ dateRange }) {
               onClick={(e) => e.stopPropagation()}
               className="glass-card"
               style={{
-                maxWidth: '1200px',
+                maxWidth: isMobile ? '100%' : '1200px',
                 width: '100%',
-                maxHeight: '90vh',
+                maxHeight: isMobile ? '100vh' : '90vh',
                 overflowY: 'auto',
                 position: 'relative',
+                borderRadius: isMobile ? '0' : '20px',
+                margin: isMobile ? '0' : undefined,
               }}
             >
               {/* Header */}
@@ -278,35 +291,46 @@ function Devices({ dateRange }) {
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                marginBottom: '24px',
-                paddingBottom: '20px',
+                marginBottom: isMobile ? '16px' : '24px',
+                paddingBottom: isMobile ? '12px' : '20px',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '16px', flex: 1, minWidth: 0 }}>
                   <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '16px',
+                    width: isMobile ? '48px' : '64px',
+                    height: isMobile ? '48px' : '64px',
+                    borderRadius: isMobile ? '12px' : '16px',
                     background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    flexShrink: 0,
                   }}>
-                    <Wifi size={32} color="#fff" />
+                    <Wifi size={isMobile ? 24 : 32} color="#fff" />
                   </div>
-                  <div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
                     <h2 style={{
-                      fontSize: '28px',
+                      fontSize: isMobile ? '18px' : '28px',
                       fontWeight: '800',
                       background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
-                      marginBottom: '6px',
+                      marginBottom: '4px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                     }}>
                       {selectedDevice.friendly_name}
                     </h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+                    <p style={{ 
+                      color: 'var(--text-secondary)', 
+                      fontSize: isMobile ? '11px' : '14px', 
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
                       {selectedDevice.ip} • {selectedDevice.mac}
                     </p>
                   </div>
@@ -336,9 +360,9 @@ function Devices({ dateRange }) {
               {/* Stats */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '16px',
-                marginBottom: '32px',
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: isMobile ? '10px' : '16px',
+                marginBottom: isMobile ? '20px' : '32px',
               }}>
                 {[
                   { label: 'Downloaded', value: formatBytes(selectedDevice.downloaded), icon: Download, gradient: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
@@ -356,12 +380,12 @@ function Devices({ dateRange }) {
                       className="stat-card"
                       style={{ textAlign: 'center' }}
                     >
-                      <Icon size={24} color="#00f5ff" style={{ marginBottom: '8px' }} />
-                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                      <Icon size={isMobile ? 18 : 24} color="#00f5ff" style={{ marginBottom: isMobile ? '4px' : '8px' }} />
+                      <div style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                         {stat.label}
                       </div>
                       <div style={{
-                        fontSize: '20px',
+                        fontSize: isMobile ? '15px' : '20px',
                         fontWeight: '700',
                         background: stat.gradient,
                         WebkitBackgroundClip: 'text',
@@ -384,15 +408,15 @@ function Devices({ dateRange }) {
                   {/* Charts */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                    gap: '24px',
-                    marginBottom: '32px',
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))',
+                    gap: isMobile ? '16px' : '24px',
+                    marginBottom: isMobile ? '20px' : '32px',
                   }}>
                     <div className="gradient-card">
-                      <h4 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: '600' }}>
+                      <h4 style={{ marginBottom: isMobile ? '12px' : '20px', fontSize: isMobile ? '14px' : '16px', fontWeight: '600' }}>
                         Traffic by Protocol
                       </h4>
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
                         <PieChart>
                           <Pie
                             data={pieData}
@@ -422,10 +446,10 @@ function Devices({ dateRange }) {
                     </div>
 
                     <div className="gradient-card">
-                      <h4 style={{ marginBottom: '20px', fontSize: '16px', fontWeight: '600' }}>
+                      <h4 style={{ marginBottom: isMobile ? '12px' : '20px', fontSize: isMobile ? '14px' : '16px', fontWeight: '600' }}>
                         Download vs Upload
                       </h4>
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
                         <BarChart data={barData}>
                           <defs>
                             <linearGradient id="barDownload" x1="0" y1="0" x2="0" y2="1">
@@ -441,10 +465,10 @@ function Devices({ dateRange }) {
                           <XAxis
                             dataKey="name"
                             stroke="var(--text-secondary)"
-                            fontSize={11}
+                            fontSize={isMobile ? 9 : 11}
                             angle={-45}
                             textAnchor="end"
-                            height={100}
+                            height={isMobile ? 60 : 100}
                           />
                           <YAxis
                             stroke="var(--text-secondary)"
@@ -471,8 +495,8 @@ function Devices({ dateRange }) {
                   {/* Protocol Table */}
                   <div>
                     <h4 style={{
-                      marginBottom: '16px',
-                      fontSize: '18px',
+                      marginBottom: isMobile ? '12px' : '16px',
+                      fontSize: isMobile ? '14px' : '18px',
                       fontWeight: '700',
                       background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
                       WebkitBackgroundClip: 'text',
@@ -487,15 +511,15 @@ function Devices({ dateRange }) {
                         <thead>
                           <tr>
                             <th>Protocol</th>
-                            <th>Port</th>
+                            {!isMobile && <th>Port</th>}
                             <th>Download</th>
                             <th>Upload</th>
-                            <th>Packets</th>
-                            <th>Connections</th>
+                            {!isMobile && <th>Packets</th>}
+                            {!isMobile && <th>Connections</th>}
                           </tr>
                         </thead>
                         <tbody>
-                          {protocols.slice(0, 10).map((proto, i) => (
+                          {protocols.slice(0, isMobile ? 5 : 10).map((proto, i) => (
                             <motion.tr
                               key={i}
                               initial={{ opacity: 0 }}
@@ -503,13 +527,15 @@ function Devices({ dateRange }) {
                               transition={{ delay: i * 0.05 }}
                             >
                               <td>
-                                <span className="badge badge-info">{proto.protocol}</span>
+                                <span className="badge badge-info">
+                                  {proto.protocol}{isMobile && proto.port ? `:${proto.port}` : ''}
+                                </span>
                               </td>
-                              <td>{proto.port}</td>
+                              {!isMobile && <td>{proto.port}</td>}
                               <td>{formatBytes(proto.downloaded)}</td>
                               <td>{formatBytes(proto.uploaded)}</td>
-                              <td>{formatNumber(proto.rx_packets + proto.tx_packets)}</td>
-                              <td>{formatNumber(proto.connections)}</td>
+                              {!isMobile && <td>{formatNumber(proto.rx_packets + proto.tx_packets)}</td>}
+                              {!isMobile && <td>{formatNumber(proto.connections)}</td>}
                             </motion.tr>
                           ))}
                         </tbody>

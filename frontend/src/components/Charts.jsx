@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { LineChart as ChartIcon, Filter, Check } from 'lucide-react'
+import { LineChart as ChartIcon, Filter, Check, X } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { formatBytes } from '../utils/format'
+import { useIsMobile } from '../App'
 
 function Charts({ dateRange }) {
+  const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
   const [timeseries, setTimeseries] = useState([])
   const [devices, setDevices] = useState([])
@@ -203,123 +205,294 @@ function Charts({ dateRange }) {
         </ResponsiveContainer>
       </motion.div>
 
-      {/* Filter Panel */}
-      <AnimatePresence>
-        {filterOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className="glass-card"
-            style={{
-              width: '300px',
-              maxHeight: '600px',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div style={{ marginBottom: '20px' }}>
-              <h4 style={{
-                fontSize: '18px',
-                fontWeight: '700',
-                background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                marginBottom: '8px',
+      {/* Filter Panel - Desktop */}
+      {!isMobile && (
+        <AnimatePresence>
+          {filterOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
+              className="glass-card"
+              style={{
+                width: '300px',
+                maxHeight: '600px',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <div style={{ marginBottom: '20px' }}>
+                <h4 style={{
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  marginBottom: '8px',
+                }}>
+                  Filter Devices
+                </h4>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
+                  Select devices to visualize
+                </p>
+              </div>
+
+              {selectedMacs.length > 0 && (
+                <button
+                  onClick={() => setSelectedMacs([])}
+                  className="modern-button"
+                  style={{
+                    width: '100%',
+                    marginBottom: '16px',
+                    background: 'rgba(255, 16, 240, 0.1)',
+                    border: '1px solid rgba(255, 16, 240, 0.3)',
+                  }}
+                >
+                  Clear All
+                </button>
+              )}
+
+              <div style={{ flex: 1, overflowY: 'auto', marginRight: '-10px', paddingRight: '10px' }}>
+                {devices.map((device, index) => {
+                  const isSelected = selectedMacs.includes(device.mac)
+
+                  return (
+                    <motion.div
+                      key={device.mac}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      onClick={() => handleDeviceToggle(device.mac)}
+                      style={{
+                        background: isSelected ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                        border: `1px solid ${isSelected ? 'rgba(0, 245, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
+                        borderRadius: '12px',
+                        padding: '12px',
+                        marginBottom: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                      whileHover={{
+                        scale: 1.02,
+                        backgroundColor: isSelected ? 'rgba(0, 245, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: isSelected ? '#00f5ff' : '#fff',
+                          marginBottom: '4px',
+                        }}>
+                          {device.friendly_name}
+                        </div>
+                        <div style={{
+                          fontSize: '12px',
+                          color: 'var(--text-muted)',
+                        }}>
+                          {formatBytes(device.total)}
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Check size={14} color="#fff" />
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* Filter Panel - Mobile Fullscreen */}
+      {isMobile && (
+        <AnimatePresence>
+          {filterOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(10, 14, 39, 0.95)',
+                backdropFilter: 'blur(20px)',
+                zIndex: 1000,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                padding: '20px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
               }}>
-                Filter Devices
-              </h4>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
-                Select devices to visualize
-              </p>
-            </div>
+                <div>
+                  <h4 style={{
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    marginBottom: '4px',
+                  }}>
+                    Filter Devices
+                  </h4>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
+                    {selectedMacs.length > 0 ? `${selectedMacs.length} selected` : 'Select devices to filter'}
+                  </p>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setFilterOpen(false)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={20} color="#fff" />
+                </motion.button>
+              </div>
 
-            {selectedMacs.length > 0 && (
-              <button
-                onClick={() => setSelectedMacs([])}
-                className="modern-button"
-                style={{
-                  width: '100%',
-                  marginBottom: '16px',
-                  background: 'rgba(255, 16, 240, 0.1)',
-                  border: '1px solid rgba(255, 16, 240, 0.3)',
-                }}
-              >
-                Clear All
-              </button>
-            )}
-
-            <div style={{ flex: 1, overflowY: 'auto', marginRight: '-10px', paddingRight: '10px' }}>
-              {devices.map((device, index) => {
-                const isSelected = selectedMacs.includes(device.mac)
-
-                return (
-                  <motion.div
-                    key={device.mac}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    onClick={() => handleDeviceToggle(device.mac)}
+              {/* Clear All */}
+              {selectedMacs.length > 0 && (
+                <div style={{ padding: '12px 20px' }}>
+                  <button
+                    onClick={() => setSelectedMacs([])}
+                    className="modern-button"
                     style={{
-                      background: isSelected ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                      border: `1px solid ${isSelected ? 'rgba(0, 245, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
-                      borderRadius: '12px',
+                      width: '100%',
                       padding: '12px',
-                      marginBottom: '8px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                    whileHover={{
-                      scale: 1.02,
-                      backgroundColor: isSelected ? 'rgba(0, 245, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      background: 'rgba(255, 16, 240, 0.1)',
+                      border: '1px solid rgba(255, 16, 240, 0.3)',
                     }}
                   >
-                    <div style={{ flex: 1 }}>
-                      <div style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: isSelected ? '#00f5ff' : '#fff',
-                        marginBottom: '4px',
-                      }}>
-                        {device.friendly_name}
-                      </div>
-                      <div style={{
-                        fontSize: '12px',
-                        color: 'var(--text-muted)',
-                      }}>
-                        {formatBytes(device.total)}
-                      </div>
-                    </div>
+                    Clear All ({selectedMacs.length})
+                  </button>
+                </div>
+              )}
 
-                    {isSelected && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        style={{
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Check size={14} color="#fff" />
-                      </motion.div>
-                    )}
-                  </motion.div>
-                )
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Device List */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
+                {devices.map((device, index) => {
+                  const isSelected = selectedMacs.includes(device.mac)
+
+                  return (
+                    <motion.div
+                      key={device.mac}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => handleDeviceToggle(device.mac)}
+                      style={{
+                        background: isSelected ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                        border: `1px solid ${isSelected ? 'rgba(0, 245, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
+                        borderRadius: '12px',
+                        padding: '14px 16px',
+                        marginBottom: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontSize: '15px',
+                          fontWeight: '600',
+                          color: isSelected ? '#00f5ff' : '#fff',
+                          marginBottom: '4px',
+                        }}>
+                          {device.friendly_name}
+                        </div>
+                        <div style={{
+                          fontSize: '13px',
+                          color: 'var(--text-muted)',
+                        }}>
+                          {formatBytes(device.total)}
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Check size={16} color="#fff" />
+                        </motion.div>
+                      )}
+                    </motion.div>
+                  )
+                })}
+              </div>
+
+              {/* Apply Button */}
+              <div style={{
+                padding: '16px 20px',
+                paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+              }}>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setFilterOpen(false)}
+                  className="modern-button"
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    fontSize: '15px',
+                  }}
+                >
+                  Apply Filter
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   )
 }

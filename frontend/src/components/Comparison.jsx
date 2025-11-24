@@ -4,8 +4,10 @@ import { Calendar, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react'
 import dayjs from 'dayjs'
 import { formatBytes } from '../utils/format'
 import DateRangePicker from './DateRangePicker'
+import { useIsMobile } from '../App'
 
 function Comparison() {
+  const isMobile = useIsMobile()
   const [period1, setPeriod1] = useState([dayjs().subtract(60, 'days'), dayjs().subtract(31, 'days')])
   const [period2, setPeriod2] = useState([dayjs().subtract(30, 'days'), dayjs()])
   const [data1, setData1] = useState(null)
@@ -96,100 +98,197 @@ function Comparison() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
             className="glass-card"
-            style={{ marginBottom: '24px' }}
+            style={{ marginBottom: isMobile ? '16px' : '24px' }}
           >
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto 1fr',
-              gap: '32px',
-              alignItems: 'center',
-            }}>
-              {/* Period 1 */}
-              <div>
-                <div style={{
-                  fontSize: '14px',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '12px',
-                  fontWeight: '500',
-                }}>
-                  {stat.label} - Period 1
+            {isMobile ? (
+              // Mobile: Horizontal layout (compact)
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                gap: '12px',
+                alignItems: 'center',
+              }}>
+                {/* Period 1 */}
+                <div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '6px',
+                    fontWeight: '500',
+                  }}>
+                    {stat.label}
+                  </div>
+                  <div style={{
+                    fontSize: '20px',
+                    fontWeight: '800',
+                    background: stat.gradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                    {formatBytes(stat.value1)}
+                  </div>
+                  <div style={{
+                    fontSize: '10px',
+                    color: 'var(--text-muted)',
+                    marginTop: '4px',
+                  }}>
+                    {period1[0].format('MMM DD')} - {period1[1].format('MMM DD')}
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: '36px',
-                  fontWeight: '800',
-                  background: stat.gradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}>
-                  {formatBytes(stat.value1)}
-                </div>
-                <div style={{
-                  fontSize: '13px',
-                  color: 'var(--text-muted)',
-                  marginTop: '8px',
-                }}>
-                  {period1[0].format('MMM DD')} - {period1[1].format('MMM DD, YYYY')}
-                </div>
-              </div>
 
-              {/* Arrow & Change */}
-              <div style={{ textAlign: 'center', minWidth: '120px' }}>
-                <motion.div
-                  animate={{ x: [0, 10, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  <ArrowRight size={32} color="#00f5ff" />
-                </motion.div>
-                <div style={{
-                  marginTop: '12px',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  background: stat.change >= 0
-                    ? 'rgba(57, 255, 20, 0.15)'
-                    : 'rgba(255, 16, 240, 0.15)',
-                  border: `1px solid ${stat.change >= 0 ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 16, 240, 0.3)'}`,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  color: stat.change >= 0 ? '#39ff14' : '#ff10f0',
-                }}>
-                  {stat.change >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
-                  {Math.abs(stat.change).toFixed(1)}%
+                {/* Arrow & Change */}
+                <div style={{ textAlign: 'center', minWidth: '70px' }}>
+                  <motion.div
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    <ArrowRight size={20} color="#00f5ff" />
+                  </motion.div>
+                  <div style={{
+                    marginTop: '6px',
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    background: stat.change >= 0
+                      ? 'rgba(57, 255, 20, 0.15)'
+                      : 'rgba(255, 16, 240, 0.15)',
+                    border: `1px solid ${stat.change >= 0 ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 16, 240, 0.3)'}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: stat.change >= 0 ? '#39ff14' : '#ff10f0',
+                  }}>
+                    {stat.change >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                    {Math.abs(stat.change).toFixed(1)}%
+                  </div>
                 </div>
-              </div>
 
-              {/* Period 2 */}
-              <div style={{ textAlign: 'right' }}>
-                <div style={{
-                  fontSize: '14px',
-                  color: 'var(--text-secondary)',
-                  marginBottom: '12px',
-                  fontWeight: '500',
-                }}>
-                  {stat.label} - Period 2
-                </div>
-                <div style={{
-                  fontSize: '36px',
-                  fontWeight: '800',
-                  background: stat.gradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}>
-                  {formatBytes(stat.value2)}
-                </div>
-                <div style={{
-                  fontSize: '13px',
-                  color: 'var(--text-muted)',
-                  marginTop: '8px',
-                }}>
-                  {period2[0].format('MMM DD')} - {period2[1].format('MMM DD, YYYY')}
+                {/* Period 2 */}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '6px',
+                    fontWeight: '500',
+                  }}>
+                    {stat.label}
+                  </div>
+                  <div style={{
+                    fontSize: '20px',
+                    fontWeight: '800',
+                    background: stat.gradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                    {formatBytes(stat.value2)}
+                  </div>
+                  <div style={{
+                    fontSize: '10px',
+                    color: 'var(--text-muted)',
+                    marginTop: '4px',
+                  }}>
+                    {period2[0].format('MMM DD')} - {period2[1].format('MMM DD')}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Desktop: Horizontal layout
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                gap: '32px',
+                alignItems: 'center',
+              }}>
+                {/* Period 1 */}
+                <div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '12px',
+                    fontWeight: '500',
+                  }}>
+                    {stat.label} - Period 1
+                  </div>
+                  <div style={{
+                    fontSize: '36px',
+                    fontWeight: '800',
+                    background: stat.gradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                    {formatBytes(stat.value1)}
+                  </div>
+                  <div style={{
+                    fontSize: '13px',
+                    color: 'var(--text-muted)',
+                    marginTop: '8px',
+                  }}>
+                    {period1[0].format('MMM DD')} - {period1[1].format('MMM DD, YYYY')}
+                  </div>
+                </div>
+
+                {/* Arrow & Change */}
+                <div style={{ textAlign: 'center', minWidth: '120px' }}>
+                  <motion.div
+                    animate={{ x: [0, 10, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    <ArrowRight size={32} color="#00f5ff" />
+                  </motion.div>
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    background: stat.change >= 0
+                      ? 'rgba(57, 255, 20, 0.15)'
+                      : 'rgba(255, 16, 240, 0.15)',
+                    border: `1px solid ${stat.change >= 0 ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 16, 240, 0.3)'}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: stat.change >= 0 ? '#39ff14' : '#ff10f0',
+                  }}>
+                    {stat.change >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
+                    {Math.abs(stat.change).toFixed(1)}%
+                  </div>
+                </div>
+
+                {/* Period 2 */}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '12px',
+                    fontWeight: '500',
+                  }}>
+                    {stat.label} - Period 2
+                  </div>
+                  <div style={{
+                    fontSize: '36px',
+                    fontWeight: '800',
+                    background: stat.gradient,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                    {formatBytes(stat.value2)}
+                  </div>
+                  <div style={{
+                    fontSize: '13px',
+                    color: 'var(--text-muted)',
+                    marginTop: '8px',
+                  }}>
+                    {period2[0].format('MMM DD')} - {period2[1].format('MMM DD, YYYY')}
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         ))}
 
@@ -201,54 +300,54 @@ function Comparison() {
           className="glass-card"
         >
           <h4 style={{
-            marginBottom: '20px',
-            fontSize: '20px',
+            marginBottom: isMobile ? '16px' : '20px',
+            fontSize: isMobile ? '18px' : '20px',
             fontWeight: '700',
             background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-            Period Summary
+            Summary
           </h4>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: isMobile ? '12px' : '20px',
           }}>
             <div className="stat-card">
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Period 1 Days
+              <div style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                P1 Days
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#00f5ff' }}>
+              <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '700', color: '#00f5ff' }}>
                 {data1.days.length}
               </div>
             </div>
 
             <div className="stat-card">
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Period 2 Days
+              <div style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                P2 Days
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#00f5ff' }}>
+              <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '700', color: '#00f5ff' }}>
                 {data2.days.length}
               </div>
             </div>
 
             <div className="stat-card">
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Avg Daily Traffic P1
+              <div style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Avg P1
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#fa709a' }}>
+              <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '700', color: '#fa709a' }}>
                 {formatBytes((data1.total_downloaded + data1.total_uploaded) / data1.days.length)}
               </div>
             </div>
 
             <div className="stat-card">
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Avg Daily Traffic P2
+              <div style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Avg P2
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#fa709a' }}>
+              <div style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: '700', color: '#fa709a' }}>
                 {formatBytes((data2.total_downloaded + data2.total_uploaded) / data2.days.length)}
               </div>
             </div>
@@ -265,11 +364,11 @@ function Comparison() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass-card"
-        style={{ marginBottom: '40px' }}
+        style={{ marginBottom: isMobile ? '24px' : '40px' }}
       >
         <h3 style={{
-          marginBottom: '32px',
-          fontSize: '28px',
+          marginBottom: isMobile ? '20px' : '32px',
+          fontSize: isMobile ? '20px' : '28px',
           fontWeight: '800',
           background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
           WebkitBackgroundClip: 'text',
@@ -277,21 +376,21 @@ function Comparison() {
           backgroundClip: 'text',
           textAlign: 'center',
         }}>
-          Compare Two Periods
+          Compare Periods
         </h3>
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '32px',
-          marginBottom: '32px',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: isMobile ? '16px' : '32px',
+          marginBottom: isMobile ? '20px' : '32px',
         }}>
           {/* Period 1 */}
           <div className="gradient-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <Calendar size={24} color="#00f5ff" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <Calendar size={isMobile ? 20 : 24} color="#00f5ff" />
               <h4 style={{
-                fontSize: '18px',
+                fontSize: isMobile ? '16px' : '18px',
                 fontWeight: '700',
                 color: '#00f5ff',
                 margin: 0,
@@ -310,10 +409,10 @@ function Comparison() {
 
           {/* Period 2 */}
           <div className="gradient-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <Calendar size={24} color="#b24bf3" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <Calendar size={isMobile ? 20 : 24} color="#b24bf3" />
               <h4 style={{
-                fontSize: '18px',
+                fontSize: isMobile ? '16px' : '18px',
                 fontWeight: '700',
                 color: '#b24bf3',
                 margin: 0,
@@ -332,15 +431,15 @@ function Comparison() {
         </div>
 
         <motion.button
-          whileHover={{ scale: 1.02 }}
+          whileHover={isMobile ? {} : { scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleCompare}
           disabled={loading}
           className="modern-button"
           style={{
             width: '100%',
-            padding: '16px',
-            fontSize: '16px',
+            padding: isMobile ? '14px' : '16px',
+            fontSize: isMobile ? '15px' : '16px',
             position: 'relative',
             overflow: 'hidden',
           }}

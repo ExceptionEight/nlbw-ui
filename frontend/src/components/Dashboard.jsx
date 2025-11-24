@@ -3,8 +3,10 @@ import { motion } from 'framer-motion'
 import { Download, Upload, Laptop, Activity, TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { formatBytes, formatNumber } from '../utils/format'
+import { useIsMobile } from '../App'
 
 function Dashboard({ dateRange }) {
+  const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState(null)
 
@@ -68,8 +70,9 @@ function Dashboard({ dateRange }) {
     .sort((a, b) => b.downloaded - a.downloaded)
     .slice(0, 10)
 
+  const maxNameLength = isMobile ? 8 : 15
   const topDevicesChart = topDevices.map((d) => ({
-    name: d.friendly_name.length > 15 ? d.friendly_name.substring(0, 15) + '...' : d.friendly_name,
+    name: d.friendly_name.length > maxNameLength ? d.friendly_name.substring(0, maxNameLength) + '...' : d.friendly_name,
     Downloaded: d.downloaded,
     Uploaded: d.uploaded,
   }))
@@ -129,9 +132,9 @@ function Dashboard({ dateRange }) {
         animate="show"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '24px',
-          marginBottom: '40px',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: isMobile ? '12px' : '24px',
+          marginBottom: isMobile ? '24px' : '40px',
         }}
       >
         {statCards.map((card, index) => {
@@ -140,7 +143,7 @@ function Dashboard({ dateRange }) {
             <motion.div
               key={index}
               variants={item}
-              whileHover={{ scale: 1.02, y: -4 }}
+              whileHover={isMobile ? {} : { scale: 1.02, y: -4 }}
               transition={{ duration: 0.15 }}
               className="stat-card"
               style={{
@@ -152,8 +155,8 @@ function Dashboard({ dateRange }) {
                 position: 'absolute',
                 top: -50,
                 right: -50,
-                width: 150,
-                height: 150,
+                width: isMobile ? 100 : 150,
+                height: isMobile ? 100 : 150,
                 background: card.gradient,
                 borderRadius: '50%',
                 opacity: 0.1,
@@ -165,30 +168,30 @@ function Dashboard({ dateRange }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: '12px',
+                  marginBottom: isMobile ? '8px' : '12px',
                 }}>
                   <span style={{
-                    fontSize: '14px',
+                    fontSize: isMobile ? '11px' : '14px',
                     color: 'var(--text-secondary)',
                     fontWeight: '500',
                   }}>
                     {card.title}
                   </span>
                   <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '12px',
+                    width: isMobile ? '28px' : '40px',
+                    height: isMobile ? '28px' : '40px',
+                    borderRadius: isMobile ? '8px' : '12px',
                     background: `${card.color}15`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                    <Icon size={20} color={card.color} />
+                    <Icon size={isMobile ? 14 : 20} color={card.color} />
                   </div>
                 </div>
 
                 <div style={{
-                  fontSize: '32px',
+                  fontSize: isMobile ? '20px' : '32px',
                   fontWeight: '800',
                   background: card.gradient,
                   WebkitBackgroundClip: 'text',
@@ -209,11 +212,11 @@ function Dashboard({ dateRange }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="glass-card"
-        style={{ marginBottom: '40px' }}
+        style={{ marginBottom: isMobile ? '24px' : '40px' }}
       >
         <h3 style={{
-          marginBottom: '24px',
-          fontSize: '20px',
+          marginBottom: isMobile ? '16px' : '24px',
+          fontSize: isMobile ? '16px' : '20px',
           fontWeight: '700',
           background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
           WebkitBackgroundClip: 'text',
@@ -223,7 +226,7 @@ function Dashboard({ dateRange }) {
           Top 10 Devices by Traffic
         </h3>
 
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
           <BarChart data={topDevicesChart}>
             <defs>
               <linearGradient id="downloadGradient" x1="0" y1="0" x2="0" y2="1">
@@ -239,10 +242,10 @@ function Dashboard({ dateRange }) {
             <XAxis
               dataKey="name"
               stroke="var(--text-secondary)"
-              fontSize={12}
+              fontSize={isMobile ? 10 : 12}
               angle={-45}
               textAnchor="end"
-              height={100}
+              height={isMobile ? 70 : 100}
             />
             <YAxis
               stroke="var(--text-secondary)"
@@ -278,8 +281,8 @@ function Dashboard({ dateRange }) {
         className="glass-card"
       >
         <h3 style={{
-          marginBottom: '24px',
-          fontSize: '20px',
+          marginBottom: isMobile ? '16px' : '24px',
+          fontSize: isMobile ? '16px' : '20px',
           fontWeight: '700',
           background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
           WebkitBackgroundClip: 'text',
@@ -294,7 +297,7 @@ function Dashboard({ dateRange }) {
             <thead>
               <tr>
                 <th>Device</th>
-                <th>IP Address</th>
+                {!isMobile && <th>IP Address</th>}
                 <th>Downloaded</th>
                 <th>Uploaded</th>
               </tr>
@@ -308,19 +311,26 @@ function Dashboard({ dateRange }) {
                   transition={{ delay: 0.6 + index * 0.05 }}
                 >
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
                       <div style={{
-                        width: '10px',
-                        height: '10px',
+                        width: isMobile ? '8px' : '10px',
+                        height: isMobile ? '8px' : '10px',
                         borderRadius: '50%',
                         background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                        flexShrink: 0,
                       }} />
-                      <strong>{device.friendly_name}</strong>
+                      <strong style={{ fontSize: isMobile ? '13px' : 'inherit' }}>
+                        {isMobile && device.friendly_name.length > 12 
+                          ? device.friendly_name.substring(0, 12) + '...' 
+                          : device.friendly_name}
+                      </strong>
                     </div>
                   </td>
-                  <td>
-                    <code style={{ fontSize: '13px' }}>{device.ip}</code>
-                  </td>
+                  {!isMobile && (
+                    <td>
+                      <code style={{ fontSize: '13px' }}>{device.ip}</code>
+                    </td>
+                  )}
                   <td>
                     <span className="badge badge-success">
                       {formatBytes(device.downloaded)}

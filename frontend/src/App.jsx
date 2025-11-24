@@ -17,7 +17,23 @@ import Charts from './components/Charts'
 import Comparison from './components/Comparison'
 import DateRangePicker from './components/DateRangePicker'
 
+// Mobile breakpoint
+export const MOBILE_BREAKPOINT = 430
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  return isMobile
+}
+
 function App() {
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [dateRange, setDateRange] = useState([
     dayjs().subtract(30, 'days'),
@@ -80,7 +96,7 @@ function App() {
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          padding: '20px 40px',
+          padding: isMobile ? '12px 16px' : '20px 40px',
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
@@ -94,19 +110,21 @@ function App() {
           justifyContent: 'space-between',
         }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Wifi size={32} color="#00f5ff" />
-            <h1 style={{
-              margin: 0,
-              fontSize: '28px',
-              fontWeight: '800',
-              background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              NLBW UI
-            </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
+            <Wifi size={isMobile ? 24 : 32} color="#00f5ff" />
+            {!isMobile && (
+              <h1 style={{
+                margin: 0,
+                fontSize: '28px',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                NLBW UI
+              </h1>
+            )}
           </div>
 
           {/* Date Range Picker */}
@@ -131,16 +149,17 @@ function App() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
         style={{
-          padding: '30px 40px 0',
+          padding: isMobile ? '16px 16px 0' : '30px 40px 0',
           maxWidth: '1400px',
           margin: '0 auto',
         }}
       >
         <div style={{
           display: 'flex',
-          gap: '12px',
+          gap: isMobile ? '4px' : '12px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
           paddingBottom: '0',
+          justifyContent: isMobile ? 'space-around' : 'flex-start',
         }}>
           {tabs.map((tab) => {
             const Icon = tab.icon
@@ -150,16 +169,17 @@ function App() {
               <motion.button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                whileHover={{ y: -2 }}
+                whileHover={isMobile ? {} : { y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 style={{
                   position: 'relative',
                   background: 'transparent',
                   border: 'none',
-                  padding: '16px 24px',
+                  padding: isMobile ? '12px 16px' : '16px 24px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '10px',
                   color: isActive ? '#00f5ff' : '#7a8ba3',
                   fontSize: '15px',
@@ -168,8 +188,8 @@ function App() {
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
-                <Icon size={20} />
-                <span>{tab.label}</span>
+                <Icon size={isMobile ? 22 : 20} />
+                {!isMobile && <span>{tab.label}</span>}
 
                 {isActive && (
                   <motion.div
@@ -194,7 +214,7 @@ function App() {
 
       {/* Content */}
       <main style={{
-        padding: '40px',
+        padding: isMobile ? '20px 16px' : '40px',
         maxWidth: '1400px',
         margin: '0 auto',
       }}>
