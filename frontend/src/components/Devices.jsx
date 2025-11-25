@@ -438,6 +438,13 @@ function Devices({ dateRange }) {
                               backdropFilter: 'blur(20px)',
                               border: '1px solid rgba(255, 255, 255, 0.1)',
                               borderRadius: '12px',
+                              color: '#fff',
+                            }}
+                            itemStyle={{
+                              color: '#fff',
+                            }}
+                            labelStyle={{
+                              color: '#fff',
                             }}
                             formatter={(value) => formatBytes(value)}
                           />
@@ -481,6 +488,13 @@ function Devices({ dateRange }) {
                               backdropFilter: 'blur(20px)',
                               border: '1px solid rgba(255, 255, 255, 0.1)',
                               borderRadius: '12px',
+                              color: '#fff',
+                            }}
+                            itemStyle={{
+                              color: '#fff',
+                            }}
+                            labelStyle={{
+                              color: '#fff',
                             }}
                             formatter={(value) => formatBytes(value)}
                           />
