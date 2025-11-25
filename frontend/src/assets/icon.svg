@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 374 372">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient-2);
+        opacity: .8;
+      }
+
+      .cls-1, .cls-2 {
+        isolation: isolate;
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient-3);
+      }
+
+      .cls-4 {
+        fill: #10b981;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+        opacity: .6;
+      }
+
+      .cls-5 {
+        fill: none;
+        stroke: rgba(255, 255, 255, .15);
+        stroke-linecap: round;
+        stroke-width: 24px;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="-66" y1="-82.11" x2="446" y2="429.89" gradientTransform="translate(0 351.89) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="-41" y1="-107.11" x2="471" y2="404.89" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-3" x1="-23.5" y1="-124.61" x2="488.5" y2="387.39" xlink:href="#linear-gradient"/>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-2" x="48" y="250" width="60" height="80" rx="12" ry="12"/>
+      <rect class="cls-1" x="138" y="170" width="60" height="160" rx="12" ry="12"/>
+      <rect class="cls-3" x="228" y="60" width="60" height="270" rx="12" ry="12"/>
+      <circle class="cls-4" cx="312" cy="20" r="20"/>
+    </g>
+    <path class="cls-5" d="M12,360c70,0,100-240,350-240"/>
+  </g>
+</svg>

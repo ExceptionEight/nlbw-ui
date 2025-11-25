@@ -5,9 +5,9 @@ import {
   Calendar,
   Laptop,
   LineChart,
-  GitCompare,
-  Wifi
+  GitCompare
 } from 'lucide-react'
+import logo from './assets/icon.svg'
 import dayjs from 'dayjs'
 
 import Dashboard from './components/Dashboard'
@@ -111,7 +111,15 @@ function App() {
         }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-            <Wifi size={isMobile ? 24 : 32} color="#00f5ff" />
+            <img
+              src={logo}
+              alt="NLBW Logo"
+              style={{
+                height: isMobile ? '32px' : '40px',
+                width: 'auto',
+                filter: 'drop-shadow(0 0 8px rgba(0, 245, 255, 0.3))',
+              }}
+            />
             {!isMobile && (
               <h1 style={{
                 margin: 0,
