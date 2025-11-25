@@ -109,8 +109,9 @@ function Dashboard({ dateRange }) {
   ]
 
   const container = {
-    hidden: {},
+    hidden: { opacity: 0 },
     show: {
+      opacity: 1,
       transition: {
         staggerChildren: 0.1
       }
@@ -118,8 +119,8 @@ function Dashboard({ dateRange }) {
   }
 
   const item = {
-    hidden: { y: 20 },
-    show: { y: 0 }
+    hidden: { y: 20, opacity: 0 },
+    show: { y: 0, opacity: 1 }
   }
 
   return (
@@ -207,8 +208,8 @@ function Dashboard({ dateRange }) {
 
       {/* Top Devices Chart */}
       <motion.div
-        initial={{ y: 20 }}
-        animate={{ y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="glass-card"
         style={{ marginBottom: isMobile ? '24px' : '40px' }}
@@ -274,8 +275,8 @@ function Dashboard({ dateRange }) {
 
       {/* All Devices Table */}
       <motion.div
-        initial={{ y: 20 }}
-        animate={{ y: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
         className="glass-card"
       >
@@ -305,8 +306,8 @@ function Dashboard({ dateRange }) {
               {topDevices.map((device, index) => (
                 <motion.tr
                   key={device.mac}
-                  initial={{ x: -20 }}
-                  animate={{ x: 0 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.05 }}
                 >
                   <td>

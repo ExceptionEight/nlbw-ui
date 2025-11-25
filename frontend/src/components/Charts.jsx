@@ -105,8 +105,8 @@ function Charts({ dateRange }) {
     <div style={{ display: 'flex', gap: '24px' }}>
       {/* Main Chart */}
       <motion.div
-        initial={{ x: -20 }}
-        animate={{ x: 0 }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
         className="glass-card"
         style={{ flex: 1 }}
       >
@@ -210,9 +210,9 @@ function Charts({ dateRange }) {
         <AnimatePresence>
           {filterOpen && (
             <motion.div
-              initial={{ x: 100 }}
-              animate={{ x: 0 }}
-              exit={{ x: 100 }}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 100 }}
               className="glass-card"
               style={{
                 width: '300px',
@@ -261,8 +261,8 @@ function Charts({ dateRange }) {
                   return (
                     <motion.div
                       key={device.mac}
-                      initial={{ x: 20 }}
-                      animate={{ x: 0 }}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
                       onClick={() => handleDeviceToggle(device.mac)}
                       style={{
@@ -330,6 +330,9 @@ function Charts({ dateRange }) {
         <AnimatePresence>
           {filterOpen && (
             <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               style={{
                 position: 'fixed',
                 top: 0,
@@ -412,8 +415,8 @@ function Charts({ dateRange }) {
                   return (
                     <motion.div
                       key={device.mac}
-                      initial={{ y: 10 }}
-                      animate={{ y: 0 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.02 }}
                       onClick={() => handleDeviceToggle(device.mac)}
                       style={{
