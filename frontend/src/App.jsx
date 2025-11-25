@@ -17,8 +17,8 @@ import Charts from './components/Charts'
 import Comparison from './components/Comparison'
 import DateRangePicker from './components/DateRangePicker'
 
-// Mobile breakpoint
-export const MOBILE_BREAKPOINT = 430
+// Mobile breakpoint - covers phones and small tablets
+export const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= MOBILE_BREAKPOINT)

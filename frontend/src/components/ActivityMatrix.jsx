@@ -238,15 +238,32 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
            value < 15 * GB ? 3 : 4
   }
 
+  // Find min and max dates with data
+  const datesWithData = calendarData.filter(d => d.value > 0).map(d => d.date).sort()
+  const minDate = datesWithData.length > 0 ? dayjs(datesWithData[0]) : null
+  const maxDate = datesWithData.length > 0 ? dayjs(datesWithData[datesWithData.length - 1]) : null
+
+  // Helper to check if month should be displayed (within data range)
+  const isMonthInRange = (year, month) => {
+    if (!minDate || !maxDate) return false
+    // Simple string comparison for YYYY-MM format
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
+    const minMonthKey = minDate.format('YYYY-MM')
+    const maxMonthKey = maxDate.format('YYYY-MM')
+    return monthKey >= minMonthKey && monthKey <= maxMonthKey
+  }
+
   // Get month stats helper
   const getMonthStats = (year, month) => {
     const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`
     return monthlyStats[monthKey] || { downloaded: 0, uploaded: 0 }
   }
 
-  // Mobile year view - 3x4 grid of months
+  // Mobile year view - grid of months (only months in data range)
   const MobileYearView = ({ year }) => {
-    const months = Array.from({ length: 12 }, (_, i) => i)
+    const monthsInRange = Array.from({ length: 12 }, (_, i) => i).filter(month => isMonthInRange(year, month))
+    
+    if (monthsInRange.length === 0) return null
     
     return (
       <div style={{
@@ -254,7 +271,7 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '8px',
       }}>
-        {months.map((month) => (
+        {monthsInRange.map((month) => (
           <MobileMonthCalendar
             key={month}
             year={year}

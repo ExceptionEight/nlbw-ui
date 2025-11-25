@@ -392,9 +392,9 @@ code {
 }
 
 /* ===========================================
-   MOBILE RESPONSIVE (iPhone 15 Pro Max)
+   MOBILE RESPONSIVE
    =========================================== */
-@media (max-width: 430px) {
+@media (max-width: 768px) {
   /* Glass card */
   .glass-card {
     padding: 16px;

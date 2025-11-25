@@ -49,11 +49,7 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
   const getDayClassName = (date) => {
     const dateStr = dayjs(date).format('YYYY-MM-DD')
     const hasData = availableDateSet.has(dateStr)
-
-    if (!hasData) {
-      return 'no-data-day'
-    }
-    return 'has-data-day'
+    return hasData ? 'has-data-day' : 'no-data-day'
   }
 
   // Mobile calendar helpers
@@ -269,6 +265,122 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
     )
   }
 
+  // Desktop DatePicker content (reusable)
+  const DesktopDatePickerContent = () => (
+    <>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Calendar size={24} color="#00f5ff" />
+          <h3 style={{
+            margin: 0,
+            fontSize: '20px',
+            fontWeight: '700',
+            color: '#fff',
+          }}>
+            Select Date Range
+          </h3>
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsOpen(false)}
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: '#fff',
+          }}
+        >
+          <X size={16} />
+        </motion.button>
+      </div>
+
+      {/* Date Picker */}
+      <div style={{ marginBottom: '24px' }}>
+        <DatePicker
+          selected={startDate}
+          onChange={handleDateChange}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+          inline
+          monthsShown={2}
+          calendarClassName="custom-datepicker"
+          dayClassName={getDayClassName}
+          filterDate={(date) => {
+            const dateStr = dayjs(date).format('YYYY-MM-DD')
+            return availableDateSet.has(dateStr)
+          }}
+        />
+      </div>
+
+      {/* Actions */}
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        paddingTop: '16px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+      }}>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleCancel}
+          style={{
+            flex: 1,
+            padding: '12px',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(255, 255, 255, 0.03)',
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+          }}
+        >
+          Cancel
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleApply}
+          disabled={!startDate || !endDate}
+          style={{
+            flex: 1,
+            padding: '12px',
+            fontSize: '14px',
+            borderRadius: '10px',
+            border: 'none',
+            background: (startDate && endDate)
+              ? 'linear-gradient(135deg, #00f5ff, #00c2cc)'
+              : 'rgba(255, 255, 255, 0.1)',
+            color: '#fff',
+            fontWeight: '600',
+            cursor: (startDate && endDate) ? 'pointer' : 'not-allowed',
+            opacity: (startDate && endDate) ? 1 : 0.5,
+          }}
+        >
+          Apply
+        </motion.button>
+      </div>
+    </>
+  )
+
   // Mobile fullscreen modal
   const mobileModalContent = (
     <AnimatePresence>
@@ -439,12 +551,11 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
     </AnimatePresence>
   )
 
-  // Desktop portal modal content with animations
+  // Desktop portal modal (centered with backdrop) - for Compare page
   const portalModalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop with blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -458,302 +569,93 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
               bottom: 0,
               background: 'rgba(0, 0, 0, 0.8)',
               backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
               zIndex: 9998,
             }}
           />
-
-          {/* Date Picker Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', duration: 0.4, bounce: 0.3 }}
+          {/* Centering container */}
+          <div
             style={{
               position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               zIndex: 9999,
+              pointerEvents: 'none',
             }}
           >
-            <div
-              onClick={(e) => e.stopPropagation()}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               style={{
                 padding: '32px',
                 minWidth: '400px',
                 background: 'rgba(15, 20, 35, 0.95)',
                 backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
                 border: '1px solid rgba(255, 255, 255, 0.15)',
                 borderRadius: '20px',
                 boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                pointerEvents: 'auto',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Header */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '24px',
-                paddingBottom: '16px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Calendar size={24} color="#00f5ff" />
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: '#fff',
-                  }}>
-                    Select Date Range
-                  </h3>
-                </div>
+              <DesktopDatePickerContent />
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  )
 
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsOpen(false)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    color: '#fff',
-                  }}
-                >
-                  <X size={16} />
-                </motion.button>
-              </div>
-
-              {/* Date Picker */}
-              <div style={{ marginBottom: '24px' }}>
-                <DatePicker
-                  selected={startDate}
-                  onChange={handleDateChange}
-                  startDate={startDate}
-                  endDate={endDate}
-                  selectsRange
-                  inline
-                  monthsShown={2}
-                  calendarClassName="custom-datepicker"
-                  dayClassName={getDayClassName}
-                  filterDate={(date) => {
-                    const dateStr = dayjs(date).format('YYYY-MM-DD')
-                    return availableDateSet.has(dateStr)
-                  }}
-                />
-              </div>
-
-              {/* Actions */}
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                paddingTop: '16px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-              }}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleCancel}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    color: '#fff',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Cancel
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleApply}
-                  disabled={!startDate || !endDate}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    fontSize: '14px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    background: (startDate && endDate)
-                      ? 'linear-gradient(135deg, #00f5ff, #00c2cc)'
-                      : 'rgba(255, 255, 255, 0.1)',
-                    color: '#fff',
-                    fontWeight: '600',
-                    cursor: (startDate && endDate) ? 'pointer' : 'not-allowed',
-                    opacity: (startDate && endDate) ? 1 : 0.5,
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Apply
-                </motion.button>
-              </div>
-            </div>
+  // Desktop dropdown modal (under button) - for header
+  const dropdownModalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop to close on click outside */}
+          <div
+            onClick={() => setIsOpen(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9998,
+            }}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: '8px',
+              zIndex: 9999,
+              padding: '32px',
+              minWidth: '400px',
+              background: 'rgba(15, 20, 35, 0.95)',
+              backdropFilter: 'blur(30px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '20px',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DesktopDatePickerContent />
           </motion.div>
         </>
       )}
     </AnimatePresence>
   )
 
-  // Desktop regular modal content (no backdrop)
-  const regularModalContent = (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            marginTop: '8px',
-            zIndex: 9999,
-            padding: '32px',
-            minWidth: '400px',
-            background: 'rgba(15, 20, 35, 0.95)',
-            backdropFilter: 'blur(30px)',
-            WebkitBackdropFilter: 'blur(30px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '20px',
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-          }}
-        >
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '24px',
-            paddingBottom: '16px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Calendar size={24} color="#00f5ff" />
-              <h3 style={{
-                margin: 0,
-                fontSize: '20px',
-                fontWeight: '700',
-                color: '#fff',
-              }}>
-                Select Date Range
-              </h3>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsOpen(false)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: '#fff',
-              }}
-            >
-              <X size={16} />
-            </motion.button>
-          </div>
-
-          {/* Date Picker */}
-          <div style={{ marginBottom: '24px' }}>
-            <DatePicker
-              selected={startDate}
-              onChange={handleDateChange}
-              startDate={startDate}
-              endDate={endDate}
-              selectsRange
-              inline
-              monthsShown={2}
-              calendarClassName="custom-datepicker"
-              dayClassName={getDayClassName}
-              filterDate={(date) => {
-                const dateStr = dayjs(date).format('YYYY-MM-DD')
-                return availableDateSet.has(dateStr)
-              }}
-            />
-          </div>
-
-          {/* Actions */}
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            paddingTop: '16px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          }}>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleCancel}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '10px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(255, 255, 255, 0.03)',
-                color: '#fff',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Cancel
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleApply}
-              disabled={!startDate || !endDate}
-              style={{
-                flex: 1,
-                padding: '12px',
-                fontSize: '14px',
-                borderRadius: '10px',
-                border: 'none',
-                background: (startDate && endDate)
-                  ? 'linear-gradient(135deg, #00f5ff, #00c2cc)'
-                  : 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                fontWeight: '600',
-                cursor: (startDate && endDate) ? 'pointer' : 'not-allowed',
-                opacity: (startDate && endDate) ? 1 : 0.5,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Apply
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-
-  // Handle open - reset mobile calendar to start date month
+  // Handle open
   const handleOpen = () => {
     if (isMobile) {
       setCurrentMonth(dayjs(startDate || new Date()))
@@ -764,41 +666,44 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
 
   return (
     <>
-      <div
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          handleOpen()
-        }}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: isMobile ? '8px' : '12px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          padding: isMobile ? '8px 12px' : '10px 20px',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: '#b8c5d6',
-          fontSize: isMobile ? '12px' : '14px',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease',
-          width: '100%',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 10,
-          pointerEvents: 'auto',
-        }}
-      >
-        <Calendar size={isMobile ? 16 : 18} color="#00f5ff" />
-        <span>
-          {dateRange[0].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')} - {dateRange[1].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')}
-        </span>
+      <div style={{ position: 'relative' }}>
+        <div
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleOpen()
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: isMobile ? '8px' : '12px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: isMobile ? '8px 12px' : '10px 20px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            color: '#b8c5d6',
+            fontSize: isMobile ? '12px' : '14px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            width: '100%',
+            justifyContent: 'center',
+          }}
+        >
+          <Calendar size={isMobile ? 16 : 18} color="#00f5ff" />
+          <span>
+            {dateRange[0].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')} - {dateRange[1].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')}
+          </span>
+        </div>
+
+        {/* Desktop dropdown (under button) - not portal */}
+        {!isMobile && !usePortal && dropdownModalContent}
       </div>
 
-      {isMobile 
-        ? createPortal(mobileModalContent, document.body)
-        : (usePortal ? createPortal(portalModalContent, document.body) : regularModalContent)
-      }
+      {/* Mobile fullscreen - portal */}
+      {isMobile && createPortal(mobileModalContent, document.body)}
+      
+      {/* Desktop centered - portal (for Compare page) */}
+      {!isMobile && usePortal && createPortal(portalModalContent, document.body)}
     </>
   )
 }
