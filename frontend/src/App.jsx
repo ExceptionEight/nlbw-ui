@@ -89,8 +89,8 @@ function App() {
     <div style={{ minHeight: '100vh', paddingBottom: '40px' }}>
       {/* Header */}
       <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
         style={{
           position: 'sticky',
@@ -129,24 +129,21 @@ function App() {
 
           {/* Date Range Picker */}
           {activeTab !== 'activity' && activeTab !== 'comparison' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
+            <div>
               <DateRangePicker
                 dateRange={dateRange}
                 onChange={setDateRange}
                 availableDates={availableDates}
               />
-            </motion.div>
+            </div>
           )}
         </div>
       </motion.header>
 
       {/* Navigation Tabs */}
       <motion.nav
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        initial={{ y: -50 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
         style={{
           padding: isMobile ? '16px 16px 0' : '30px 40px 0',
@@ -221,9 +218,9 @@ function App() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            exit={{ y: -20 }}
             transition={{ duration: 0.3 }}
           >
             {renderContent()}

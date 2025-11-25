@@ -290,8 +290,8 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
     <div>
       {/* Stats */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -388,8 +388,8 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
       {years.map((year, yearIndex) => (
         <motion.div
           key={year}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 30 }}
+          animate={{ y: 0 }}
           transition={{ delay: yearIndex * 0.2 }}
           className="glass-card"
           style={{ marginBottom: isMobile ? '24px' : '40px' }}

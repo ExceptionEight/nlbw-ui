@@ -154,8 +154,8 @@ function Devices({ dateRange }) {
   return (
     <div>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         className="glass-card"
       >
         <h3 style={{
@@ -186,8 +186,8 @@ function Devices({ dateRange }) {
               {devices.map((device, index) => (
                 <motion.tr
                   key={device.mac}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleRowClick(device)}
                 >
@@ -251,9 +251,6 @@ function Devices({ dateRange }) {
       <AnimatePresence>
         {modalVisible && selectedDevice && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             style={{
               position: 'fixed',
               top: 0,
@@ -374,8 +371,8 @@ function Devices({ dateRange }) {
                   return (
                     <motion.div
                       key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ y: 20 }}
+                      animate={{ y: 0 }}
                       transition={{ delay: i * 0.1 }}
                       className="stat-card"
                       style={{ textAlign: 'center' }}
@@ -520,11 +517,8 @@ function Devices({ dateRange }) {
                         </thead>
                         <tbody>
                           {protocols.slice(0, isMobile ? 5 : 10).map((proto, i) => (
-                            <motion.tr
+                            <tr
                               key={i}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: i * 0.05 }}
                             >
                               <td>
                                 <span className="badge badge-info">
@@ -536,7 +530,7 @@ function Devices({ dateRange }) {
                               <td>{formatBytes(proto.uploaded)}</td>
                               {!isMobile && <td>{formatNumber(proto.rx_packets + proto.tx_packets)}</td>}
                               {!isMobile && <td>{formatNumber(proto.connections)}</td>}
-                            </motion.tr>
+                            </tr>
                           ))}
                         </tbody>
                       </table>
