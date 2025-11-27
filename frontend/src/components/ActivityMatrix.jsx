@@ -164,7 +164,7 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
   const handleDayClick = (date) => {
     const dayDate = dayjs(date)
     setDateRange([dayDate, dayDate])
-    setActiveTab('devices')
+    setActiveTab('dashboard')
   }
 
   if (loading) {

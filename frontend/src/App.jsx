@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Calendar,
-  Laptop,
   LineChart,
   GitCompare
 } from 'lucide-react'
@@ -12,7 +11,6 @@ import dayjs from 'dayjs'
 
 import Dashboard from './components/Dashboard'
 import ActivityMatrix from './components/ActivityMatrix'
-import Devices from './components/Devices'
 import Charts from './components/Charts'
 import Comparison from './components/Comparison'
 import DateRangePicker from './components/DateRangePicker'
@@ -63,7 +61,6 @@ function App() {
   const tabs = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { key: 'activity', label: 'Activity', icon: Calendar },
-    { key: 'devices', label: 'Devices', icon: Laptop },
     { key: 'charts', label: 'Charts', icon: LineChart },
     { key: 'comparison', label: 'Compare', icon: GitCompare },
   ]
@@ -74,8 +71,6 @@ function App() {
         return <Dashboard dateRange={dateRange} />
       case 'activity':
         return <ActivityMatrix setActiveTab={setActiveTab} setDateRange={setDateRange} />
-      case 'devices':
-        return <Devices dateRange={dateRange} />
       case 'charts':
         return <Charts dateRange={dateRange} />
       case 'comparison':
