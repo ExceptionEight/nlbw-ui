@@ -10,21 +10,25 @@ import (
 	"strings"
 	"time"
 
+	"nlbw-ui/internal/achievements"
 	"nlbw-ui/internal/aggregator"
 	"nlbw-ui/internal/cache"
 	"nlbw-ui/internal/config"
 )
 
 type Server struct {
-	cache      *cache.Cache
-	aggregator *aggregator.Aggregator
-	frontendFS embed.FS
+	cache       *cache.Cache
+	aggregator  *aggregator.Aggregator
+	calculator  *achievements.Calculator
+	frontendFS  embed.FS
 }
 
 func New(c *cache.Cache, cfg *config.Config, frontendFS embed.FS) *Server {
+	agg := aggregator.New(c, cfg)
 	return &Server{
 		cache:      c,
-		aggregator: aggregator.New(c, cfg),
+		aggregator: agg,
+		calculator: achievements.NewCalculator(c, agg, cfg),
 		frontendFS: frontendFS,
 	}
 }
@@ -38,6 +42,9 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux.HandleFunc("/api/day/", s.handleGetDay)
 	mux.HandleFunc("/api/device/", s.handleGetDevice)
 	mux.HandleFunc("/api/timeseries", s.handleGetTimeseries)
+
+	// Achievements endpoint
+	mux.HandleFunc("/api/achievements", s.handleGetAchievements)
 
 	// Old endpoints (keep for compatibility)
 	mux.HandleFunc("/api/files", s.handleGetFiles)
@@ -163,6 +170,13 @@ func (s *Server) handleGetTimeseries(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(timeseries)
 }
 
+// GET /api/achievements - достижения для всей сети
+func (s *Server) handleGetAchievements(w http.ResponseWriter, r *http.Request) {
+	networkAchievements := s.calculator.GetNetworkAchievements()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(networkAchievements)
+}
+
 // Old endpoints below
 
 func (s *Server) handleGetFiles(w http.ResponseWriter, r *http.Request) {
@@ -248,6 +262,7 @@ func (s *Server) handleFallback(w http.ResponseWriter, r *http.Request) {
 		<li>/api/day/YYYY-MM-DD - Day details</li>
 		<li>/api/device/YYYY-MM-DD/MAC - Device protocol breakdown</li>
 		<li>/api/timeseries - Timeseries data for charts</li>
+		<li><a href="/api/achievements">/api/achievements</a> - Network achievements</li>
 		<li><a href="/api/files">/api/files</a> - List of files</li>
 	</ul>
 </body>
