@@ -4,7 +4,8 @@ import {
   LayoutDashboard,
   Calendar,
   LineChart,
-  GitCompare
+  GitCompare,
+  Trophy
 } from 'lucide-react'
 import logo from './assets/icon.svg'
 import dayjs from 'dayjs'
@@ -13,6 +14,7 @@ import Dashboard from './components/Dashboard'
 import ActivityMatrix from './components/ActivityMatrix'
 import Charts from './components/Charts'
 import Comparison from './components/Comparison'
+import Achievements from './components/Achievements'
 import DateRangePicker from './components/DateRangePicker'
 
 // Mobile breakpoint - covers phones and small tablets
@@ -63,6 +65,7 @@ function App() {
     { key: 'activity', label: 'Activity', icon: Calendar },
     { key: 'charts', label: 'Charts', icon: LineChart },
     { key: 'comparison', label: 'Compare', icon: GitCompare },
+    { key: 'achievements', label: 'Achievements', icon: Trophy },
   ]
 
   const renderContent = () => {
@@ -71,6 +74,8 @@ function App() {
         return <Dashboard dateRange={dateRange} />
       case 'activity':
         return <ActivityMatrix setActiveTab={setActiveTab} setDateRange={setDateRange} />
+      case 'achievements':
+        return <Achievements />
       case 'charts':
         return <Charts dateRange={dateRange} />
       case 'comparison':
@@ -131,7 +136,7 @@ function App() {
           </div>
 
           {/* Date Range Picker */}
-          {activeTab !== 'activity' && activeTab !== 'comparison' && (
+          {activeTab !== 'activity' && activeTab !== 'comparison' && activeTab !== 'achievements' && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
