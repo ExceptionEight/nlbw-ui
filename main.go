@@ -30,14 +30,6 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	if _, err := os.Stat(cfg.DataDir); os.IsNotExist(err) {
-		fmt.Printf("Warning: data directory does not exist: %s\n", cfg.DataDir)
-		fmt.Println("Creating data directory...")
-		if err := os.MkdirAll(cfg.DataDir, 0755); err != nil {
-			log.Fatalf("Failed to create data directory: %v", err)
-		}
-	}
-
 	dataCache := cache.New()
 
 	// Проверяем, включен ли demo режим
