@@ -86,6 +86,8 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 		return c.checkSlumberPartyAchievement(achievement)
 	case AchievementILoveYou:
 		return c.checkILoveYouAchievement(achievement)
+	case AchievementMissMe:
+		return c.checkMissMeAchievement(achievement)
 	}
 
 	return status
@@ -130,6 +132,60 @@ func (c *Calculator) checkTotalTrafficAchievement(achievement Achievement) Achie
 	if status.Progress > 1.0 {
 		status.Progress = 1.0
 	}
+
+	return status
+}
+
+// checkMissMeAchievement проверяет возвращение устройства после 90+ дней отсутствия
+func (c *Calculator) checkMissMeAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: 1,
+	}
+
+	// Собираем даты активности для каждого MAC
+	macDates := make(map[string][]time.Time)
+
+	calendarData := c.aggregator.GetCalendarData()
+
+	for _, day := range calendarData {
+		dayStats := c.aggregator.GetDayStats(day.Date)
+		if dayStats == nil {
+			continue
+		}
+
+		parsedDate, err := time.Parse("2006-01-02", day.Date)
+		if err != nil {
+			continue
+		}
+
+		for mac := range dayStats.Devices {
+			macDates[mac] = append(macDates[mac], parsedDate)
+		}
+	}
+
+	// Проверяем каждый MAC на наличие gap'a >= 90 дней
+	for _, dates := range macDates {
+		if len(dates) < 2 {
+			continue
+		}
+
+		for i := 1; i < len(dates); i++ {
+			gap := int(dates[i].Sub(dates[i-1]).Hours() / 24)
+
+			if gap >= int(achievement.Threshold) {
+				returnDate := dates[i]
+				status.Unlocked = true
+				status.UnlockedAt = &returnDate
+				status.CurrentValue = 1
+				status.Progress = 1.0
+				return status
+			}
+		}
+	}
+
+	status.CurrentValue = 0
+	status.Progress = 0
 
 	return status
 }

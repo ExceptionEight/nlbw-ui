@@ -39,6 +39,9 @@ const (
 
 	// Legendary daily achievements
 	AchievementILoveYou = "i_love_you"
+
+	// Comeback achievements
+	AchievementMissMe = "miss_me"
 )
 
 // Пороговые значения в байтах
@@ -61,9 +64,10 @@ const (
 
 // Прочие пороговые значения
 const (
-	HundredMegabytes     = 100 * 1024 * 1024
+	HundredMegabytes       = 100 * 1024 * 1024
 	OneHundredFortyThreeGB = 143 * OneGigabyte
-	TwentyDevices        = 20
+	TwentyDevices          = 20
+	NinetyDays             = 90
 )
 
 // AllAchievements возвращает список всех доступных достижений
@@ -220,6 +224,15 @@ func AllAchievements() []Achievement {
 			Description: "Transfer 143 GB of data in a single day",
 			Category:    CategoryData,
 			Threshold:   OneHundredFortyThreeGB,
+		},
+
+		// Категория: Возвращение
+		{
+			ID:          AchievementMissMe,
+			Name:        "Miss me?",
+			Description: "A device returns after 90+ days of absence",
+			Category:    CategoryNetwork,
+			Threshold:   NinetyDays,
 		},
 	}
 }

@@ -96,7 +96,7 @@ function Achievements() {
   const firstLockedIndex = sortedAchievements.findIndex(a => !a.unlocked)
 
   // Format value based on category and achievement type
-  const formatValue = (value, category, achievementId) => {
+  const formatValue = (value, category, achievementId, isTarget = false) => {
     if (category === 'data') {
       return formatBytes(value)
     }
@@ -107,6 +107,11 @@ function Achievements() {
     // Ghost achievement - binary status
     if (achievementId === 'ghost') {
       return value >= 1 ? 'Detected' : 'Not seen'
+    }
+    // Miss me achievement - binary
+    if (achievementId === 'miss_me') {
+      if (isTarget) return 'Maybe'
+      return value >= 1 ? 'Yes' : 'No'
     }
     // ICMP and DNS achievements show packet counts with formatting
     return value.toLocaleString()
@@ -456,7 +461,7 @@ function Achievements() {
                         fontWeight: '600',
                         color: '#fff',
                       }}>
-                        {formatValue(current_value, achievement.category, achievement.id)} / {formatValue(target_value, achievement.category, achievement.id)}
+                        {formatValue(current_value, achievement.category, achievement.id, false)} / {formatValue(target_value, achievement.category, achievement.id, true)}
                       </div>
                     </div>
                   </div>
