@@ -1,6 +1,7 @@
 package achievements
 
 import (
+	"strings"
 	"time"
 
 	"nlbw-ui/internal/aggregator"
@@ -62,7 +63,8 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 	}
 
 	switch achievement.ID {
-	case AchievementFirstGigabyte, AchievementDataHoarder, AchievementTerabyteClub:
+	case AchievementFirstGigabyte, AchievementDataHoarder, AchievementTerabyteClub,
+		AchievementHundredTerabyte, AchievementPetabyteClub, AchievementWhatTheFuck:
 		return c.checkTotalTrafficAchievement(achievement)
 	case AchievementDailyBurner:
 		return c.checkDailyBurnerAchievement(achievement)
@@ -70,6 +72,20 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 		return c.checkConsecutiveDaysAchievement(achievement)
 	case AchievementNetworkGrowth:
 		return c.checkNetworkGrowthAchievement(achievement)
+	case AchievementPingOfDeath, AchievementUptimeKuma, AchievementSmurfAttack:
+		return c.checkICMPPacketsAchievement(achievement)
+	case AchievementRedEyed:
+		return c.checkSSHTrafficAchievement(achievement)
+	case AchievementWhatYear:
+		return c.checkFTPTrafficAchievement(achievement)
+	case AchievementISeekYou:
+		return c.checkDNSQueriesAchievement(achievement)
+	case AchievementGhost:
+		return c.checkGhostMacAchievement(achievement)
+	case AchievementSlumberParty:
+		return c.checkSlumberPartyAchievement(achievement)
+	case AchievementILoveYou:
+		return c.checkILoveYouAchievement(achievement)
 	}
 
 	return status
@@ -114,6 +130,267 @@ func (c *Calculator) checkTotalTrafficAchievement(achievement Achievement) Achie
 	if status.Progress > 1.0 {
 		status.Progress = 1.0
 	}
+
+	return status
+}
+
+// checkSlumberPartyAchievement проверяет 20+ устройств за один день
+func (c *Calculator) checkSlumberPartyAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	maxDevices := 0
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+
+	for _, day := range calendarData {
+		dayStats := c.aggregator.GetDayStats(day.Date)
+		if dayStats == nil {
+			continue
+		}
+
+		deviceCount := len(dayStats.Devices)
+		if deviceCount > maxDevices {
+			maxDevices = deviceCount
+		}
+
+		if !status.Unlocked && float64(deviceCount) >= achievement.Threshold {
+			parsedDate, err := time.Parse("2006-01-02", day.Date)
+			if err == nil {
+				unlockedDate = &parsedDate
+				status.Unlocked = true
+				status.UnlockedAt = unlockedDate
+			}
+		}
+	}
+
+	status.CurrentValue = float64(maxDevices)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkILoveYouAchievement проверяет 143 ГБ за один день
+func (c *Calculator) checkILoveYouAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	maxDailyTraffic := uint64(0)
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+
+	for _, day := range calendarData {
+		dayStats := c.aggregator.GetDayStats(day.Date)
+		if dayStats == nil {
+			continue
+		}
+
+		dailyTraffic := dayStats.Downloaded + dayStats.Uploaded
+		if dailyTraffic > maxDailyTraffic {
+			maxDailyTraffic = dailyTraffic
+		}
+
+		if !status.Unlocked && float64(dailyTraffic) >= achievement.Threshold {
+			parsedDate, err := time.Parse("2006-01-02", day.Date)
+			if err == nil {
+				unlockedDate = &parsedDate
+				status.Unlocked = true
+				status.UnlockedAt = unlockedDate
+			}
+		}
+	}
+
+	status.CurrentValue = float64(maxDailyTraffic)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkFTPTrafficAchievement проверяет достижения на трафик по FTP (порт 21)
+func (c *Calculator) checkFTPTrafficAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	totalTraffic := uint64(0)
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+	allData := c.cache.GetAll()
+
+	for _, day := range calendarData {
+		for path, data := range allData {
+			fileDate := c.aggregator.ExtractDateFromFilename(path)
+			if fileDate != day.Date {
+				continue
+			}
+
+			dayTraffic := uint64(0)
+			for _, row := range data.Data {
+				if len(row) < 9 {
+					continue
+				}
+
+				port, ok := row[2].(uint16)
+				if !ok {
+					continue
+				}
+
+				// FTP порт 21
+				if port == 21 {
+					rxBytes, _ := row[6].(uint64)
+					txBytes, _ := row[8].(uint64)
+					dayTraffic += rxBytes + txBytes
+				}
+			}
+
+			totalTraffic += dayTraffic
+
+			if !status.Unlocked && float64(totalTraffic) >= achievement.Threshold {
+				parsedDate, err := time.Parse("2006-01-02", day.Date)
+				if err == nil {
+					unlockedDate = &parsedDate
+					status.Unlocked = true
+					status.UnlockedAt = unlockedDate
+				}
+			}
+		}
+	}
+
+	status.CurrentValue = float64(totalTraffic)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkDNSQueriesAchievement проверяет достижения на количество DNS запросов (порт 53)
+func (c *Calculator) checkDNSQueriesAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	totalQueries := uint64(0)
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+	allData := c.cache.GetAll()
+
+	for _, day := range calendarData {
+		for path, data := range allData {
+			fileDate := c.aggregator.ExtractDateFromFilename(path)
+			if fileDate != day.Date {
+				continue
+			}
+
+			dayQueries := uint64(0)
+			for _, row := range data.Data {
+				if len(row) < 10 {
+					continue
+				}
+
+				port, ok := row[2].(uint16)
+				if !ok {
+					continue
+				}
+
+				// DNS порт 53 - считаем пакеты как запросы
+				if port == 53 {
+					rxPkts, _ := row[7].(uint64)
+					txPkts, _ := row[9].(uint64)
+					dayQueries += rxPkts + txPkts
+				}
+			}
+
+			totalQueries += dayQueries
+
+			if !status.Unlocked && float64(totalQueries) >= achievement.Threshold {
+				parsedDate, err := time.Parse("2006-01-02", day.Date)
+				if err == nil {
+					unlockedDate = &parsedDate
+					status.Unlocked = true
+					status.UnlockedAt = unlockedDate
+				}
+			}
+		}
+	}
+
+	status.CurrentValue = float64(totalQueries)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkGhostMacAchievement проверяет наличие устройства с MAC 00:00:00:00:00:00
+func (c *Calculator) checkGhostMacAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+	allData := c.cache.GetAll()
+
+	for _, day := range calendarData {
+		if status.Unlocked {
+			break
+		}
+
+		for path, data := range allData {
+			fileDate := c.aggregator.ExtractDateFromFilename(path)
+			if fileDate != day.Date {
+				continue
+			}
+
+			for _, row := range data.Data {
+				if len(row) < 4 {
+					continue
+				}
+
+				mac, ok := row[3].(string)
+				if !ok {
+					continue
+				}
+
+				// Призрак!
+				if mac == "00:00:00:00:00:00" {
+					parsedDate, err := time.Parse("2006-01-02", day.Date)
+					if err == nil {
+						unlockedDate = &parsedDate
+						status.Unlocked = true
+						status.UnlockedAt = unlockedDate
+						status.CurrentValue = 1
+						status.Progress = 1.0
+						return status
+					}
+				}
+			}
+		}
+	}
+
+	status.CurrentValue = 0
+	status.Progress = 0
 
 	return status
 }
@@ -254,6 +531,134 @@ func (c *Calculator) checkNetworkGrowthAchievement(achievement Achievement) Achi
 	}
 
 	status.CurrentValue = float64(maxDevices)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkICMPPacketsAchievement проверяет достижения на количество ICMP пакетов
+func (c *Calculator) checkICMPPacketsAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	totalPackets := uint64(0)
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+	allData := c.cache.GetAll()
+
+	for _, day := range calendarData {
+		// Находим данные для этого дня
+		for path, data := range allData {
+			fileDate := c.aggregator.ExtractDateFromFilename(path)
+			if fileDate != day.Date {
+				continue
+			}
+
+			// Считаем ICMP пакеты
+			dayPackets := uint64(0)
+			for _, row := range data.Data {
+				if len(row) < 10 {
+					continue
+				}
+
+				proto, ok := row[1].(string)
+				if !ok {
+					continue
+				}
+
+				// ICMP протокол
+				if strings.ToLower(proto) == "icmp" {
+					rxPkts, _ := row[7].(uint64)
+					txPkts, _ := row[9].(uint64)
+					dayPackets += rxPkts + txPkts
+				}
+			}
+
+			totalPackets += dayPackets
+
+			// Проверяем разблокировку
+			if !status.Unlocked && float64(totalPackets) >= achievement.Threshold {
+				parsedDate, err := time.Parse("2006-01-02", day.Date)
+				if err == nil {
+					unlockedDate = &parsedDate
+					status.Unlocked = true
+					status.UnlockedAt = unlockedDate
+				}
+			}
+		}
+	}
+
+	status.CurrentValue = float64(totalPackets)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkSSHTrafficAchievement проверяет достижения на трафик по SSH (порт 22)
+func (c *Calculator) checkSSHTrafficAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	totalTraffic := uint64(0)
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+	allData := c.cache.GetAll()
+
+	for _, day := range calendarData {
+		// Находим данные для этого дня
+		for path, data := range allData {
+			fileDate := c.aggregator.ExtractDateFromFilename(path)
+			if fileDate != day.Date {
+				continue
+			}
+
+			// Считаем SSH трафик
+			dayTraffic := uint64(0)
+			for _, row := range data.Data {
+				if len(row) < 9 {
+					continue
+				}
+
+				port, ok := row[2].(uint16)
+				if !ok {
+					continue
+				}
+
+				// SSH порт 22
+				if port == 22 {
+					rxBytes, _ := row[6].(uint64)
+					txBytes, _ := row[8].(uint64)
+					dayTraffic += rxBytes + txBytes
+				}
+			}
+
+			totalTraffic += dayTraffic
+
+			// Проверяем разблокировку
+			if !status.Unlocked && float64(totalTraffic) >= achievement.Threshold {
+				parsedDate, err := time.Parse("2006-01-02", day.Date)
+				if err == nil {
+					unlockedDate = &parsedDate
+					status.Unlocked = true
+					status.UnlockedAt = unlockedDate
+				}
+			}
+		}
+	}
+
+	status.CurrentValue = float64(totalTraffic)
 	status.Progress = status.CurrentValue / status.TargetValue
 	if status.Progress > 1.0 {
 		status.Progress = 1.0

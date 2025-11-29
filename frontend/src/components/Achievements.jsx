@@ -95,12 +95,21 @@ function Achievements() {
   // Find the index where locked achievements start
   const firstLockedIndex = sortedAchievements.findIndex(a => !a.unlocked)
 
-  // Format value based on category
-  const formatValue = (value, category) => {
+  // Format value based on category and achievement type
+  const formatValue = (value, category, achievementId) => {
     if (category === 'data') {
       return formatBytes(value)
     }
-    return Math.round(value).toString()
+    // SSH and FTP achievements show bytes
+    if (achievementId === 'red_eyed' || achievementId === 'what_year') {
+      return formatBytes(value)
+    }
+    // Ghost achievement - binary status
+    if (achievementId === 'ghost') {
+      return value >= 1 ? 'Detected' : 'Not seen'
+    }
+    // ICMP and DNS achievements show packet counts with formatting
+    return value.toLocaleString()
   }
 
   const container = {
@@ -447,7 +456,7 @@ function Achievements() {
                         fontWeight: '600',
                         color: '#fff',
                       }}>
-                        {formatValue(current_value, achievement.category)} / {formatValue(target_value, achievement.category)}
+                        {formatValue(current_value, achievement.category, achievement.id)} / {formatValue(target_value, achievement.category, achievement.id)}
                       </div>
                     </div>
                   </div>
