@@ -542,7 +542,11 @@ function Dashboard({ dateRange }) {
               zIndex: 9999,
               padding: isMobile ? '0' : '20px',
             }}
-            onClick={() => setModalVisible(false)}
+            onClick={() => {
+              setModalVisible(false)
+              setSelectedProtocol(null)
+              setHoveredProtocol(null)
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, y: 50 }}
@@ -691,12 +695,21 @@ function Dashboard({ dateRange }) {
                     gap: isMobile ? '16px' : '24px',
                     marginBottom: isMobile ? '20px' : '32px',
                   }}>
-                    <div className="gradient-card">
-                      <h4 style={{ marginBottom: isMobile ? '12px' : '20px', fontSize: isMobile ? '14px' : '16px', fontWeight: '600' }}>
+                    {/* FIXED TRAFFIC BY PROTOCOL CARD */}
+                    <div
+                      className="gradient-card"
+                      onClick={() => {
+                        // Сброс выделения при клике в любое свободное место карточки
+                        setSelectedProtocol(null)
+                        setHoveredProtocol(null)
+                      }}
+                    >
+                      <h4
+                        style={{ marginBottom: isMobile ? '12px' : '20px', fontSize: isMobile ? '14px' : '16px', fontWeight: '600' }}
+                      >
                         Traffic by Protocol
                       </h4>
 
-                      {/* Pie Chart with Custom Legend */}
                       <div style={{
                         display: 'flex',
                         flexDirection: isMobile ? 'column' : 'row',
@@ -709,14 +722,7 @@ function Dashboard({ dateRange }) {
                           width: isMobile ? '100%' : 'auto',
                         }}>
                           <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
-                            <PieChart
-                              onClick={(e) => {
-                                if (!e || !e.activePayload || e.activePayload.length === 0) {
-                                  setSelectedProtocol(null)
-                                  setHoveredProtocol(null)
-                                }
-                              }}
-                            >
+                            <PieChart>
                               <Pie
                                 data={protocols.slice(0, 8).map((p, idx) => ({
                                   name: `${p.protocol}${p.port ? ':' + p.port : ''}`,
@@ -728,10 +734,26 @@ function Dashboard({ dateRange }) {
                                 outerRadius={isMobile ? 80 : 100}
                                 fill="#8884d8"
                                 dataKey="value"
+                                // Переносим onClick сюда, т.к. onClick на Cell работает нестабильно в Recharts
+                                onClick={(data, index, e) => {
+                                  // Останавливаем всплытие к карточке
+                                  // В Recharts аргумент 'e' обычно идет третьим
+                                  const event = e || index; 
+                                  if (event && event.stopPropagation) {
+                                    event.stopPropagation();
+                                  }
+
+                                  const protocolName = data.name;
+                                  if (selectedProtocol === protocolName) {
+                                    setSelectedProtocol(null);
+                                  } else {
+                                    setSelectedProtocol(protocolName);
+                                  }
+                                }}
+                                style={{ cursor: 'pointer' }}
                               >
                                 {protocols.slice(0, 8).map((entry, index) => {
                                   const protocolName = `${entry.protocol}${entry.port ? ':' + entry.port : ''}`
-                                  const isActive = hoveredProtocol === protocolName || selectedProtocol === protocolName
                                   const isDimmed = selectedProtocol
                                     ? (selectedProtocol !== protocolName)
                                     : (hoveredProtocol && hoveredProtocol !== protocolName)
@@ -744,16 +766,11 @@ function Dashboard({ dateRange }) {
                                       style={{
                                         cursor: 'pointer',
                                         transition: 'opacity 0.2s ease',
+                                        outline: 'none'
                                       }}
                                       onMouseEnter={() => setHoveredProtocol(protocolName)}
                                       onMouseLeave={() => setHoveredProtocol(null)}
-                                      onClick={() => {
-                                        if (selectedProtocol === protocolName) {
-                                          setSelectedProtocol(null)
-                                        } else {
-                                          setSelectedProtocol(protocolName)
-                                        }
-                                      }}
+                                      // Удален onClick отсюда, вся логика перенесена в Pie
                                     />
                                   )
                                 })}
@@ -790,7 +807,9 @@ function Dashboard({ dateRange }) {
                                 }}
                                 onMouseEnter={() => setHoveredProtocol(protocolName)}
                                 onMouseLeave={() => setHoveredProtocol(null)}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  // Останавливаем всплытие, чтобы не сбросилось
+                                  e.stopPropagation()
                                   if (selectedProtocol === protocolName) {
                                     setSelectedProtocol(null)
                                   } else {
