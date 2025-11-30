@@ -200,11 +200,11 @@ code {
   backdrop-filter: blur(10px);
   transition: all 0.2s ease;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .modern-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.08);
-  transform: translateX(4px);
 }
 
 .modern-table tbody td {

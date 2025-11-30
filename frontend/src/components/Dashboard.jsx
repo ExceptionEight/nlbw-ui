@@ -36,6 +36,23 @@ function Dashboard({ dateRange }) {
     setCurrentPage(1)
   }, [dateRange])
 
+  useEffect(() => {
+    if (modalVisible) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+  }, [modalVisible])
+
   const fetchSummary = async () => {
     setLoading(true)
     try {
@@ -517,13 +534,14 @@ function Dashboard({ dateRange }) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(10px)',
+              background: isMobile ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: isMobile ? 'none' : 'blur(10px)',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: isMobile ? 'stretch' : 'center',
               justifyContent: 'center',
               zIndex: 9999,
-              padding: '20px',
+              padding: isMobile ? '0' : '20px',
+              overflowY: isMobile ? 'auto' : 'visible',
             }}
             onClick={() => setModalVisible(false)}
           >
@@ -536,11 +554,15 @@ function Dashboard({ dateRange }) {
               style={{
                 maxWidth: isMobile ? '100%' : '1200px',
                 width: '100%',
-                maxHeight: isMobile ? '100vh' : '90vh',
-                overflowY: 'auto',
+                maxHeight: isMobile ? 'auto' : '90vh',
+                overflowY: isMobile ? 'visible' : 'auto',
                 position: 'relative',
                 borderRadius: isMobile ? '0' : '20px',
                 margin: isMobile ? '0' : undefined,
+                minHeight: isMobile ? '100vh' : 'auto',
+                background: isMobile ? 'transparent' : undefined,
+                border: isMobile ? 'none' : undefined,
+                boxShadow: isMobile ? 'none' : undefined,
               }}
             >
               {/* Header */}
@@ -689,8 +711,9 @@ function Dashboard({ dateRange }) {
                           <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
                             <PieChart
                               onClick={(e) => {
-                                if (!e || !e.activeLabel) {
+                                if (!e || !e.activePayload || e.activePayload.length === 0) {
                                   setSelectedProtocol(null)
+                                  setHoveredProtocol(null)
                                 }
                               }}
                             >
@@ -709,7 +732,9 @@ function Dashboard({ dateRange }) {
                                 {protocols.slice(0, 8).map((entry, index) => {
                                   const protocolName = `${entry.protocol}${entry.port ? ':' + entry.port : ''}`
                                   const isActive = hoveredProtocol === protocolName || selectedProtocol === protocolName
-                                  const isDimmed = (hoveredProtocol && hoveredProtocol !== protocolName) || (selectedProtocol && selectedProtocol !== protocolName)
+                                  const isDimmed = selectedProtocol
+                                    ? (selectedProtocol !== protocolName)
+                                    : (hoveredProtocol && hoveredProtocol !== protocolName)
 
                                   return (
                                     <Cell
@@ -750,7 +775,9 @@ function Dashboard({ dateRange }) {
                             const totalTraffic = protocols.slice(0, 8).reduce((sum, p) => sum + p.downloaded + p.uploaded, 0)
                             const percentage = ((proto.downloaded + proto.uploaded) / totalTraffic * 100).toFixed(1)
                             const isActive = hoveredProtocol === protocolName || selectedProtocol === protocolName
-                            const isDimmed = (hoveredProtocol && hoveredProtocol !== protocolName) || (selectedProtocol && selectedProtocol !== protocolName)
+                            const isDimmed = selectedProtocol
+                              ? (selectedProtocol !== protocolName)
+                              : (hoveredProtocol && hoveredProtocol !== protocolName)
 
                             return (
                               <motion.div
