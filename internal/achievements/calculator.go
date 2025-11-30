@@ -88,6 +88,10 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 		return c.checkILoveYouAchievement(achievement)
 	case AchievementMissMe:
 		return c.checkMissMeAchievement(achievement)
+	case AchievementThreeBody:
+		return c.checkThreeBodyAchievement(achievement)
+	case AchievementOnFire:
+		return c.checkOnFireAchievement(achievement)
 	}
 
 	return status
@@ -132,6 +136,78 @@ func (c *Calculator) checkTotalTrafficAchievement(achievement Achievement) Achie
 	if status.Progress > 1.0 {
 		status.Progress = 1.0
 	}
+
+	return status
+}
+
+// checkOnFireAchievement проверяет 451 ГБ upload трафика
+func (c *Calculator) checkOnFireAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	totalUploaded := uint64(0)
+	var unlockedDate *time.Time
+
+	calendarData := c.aggregator.GetCalendarData()
+
+	for _, day := range calendarData {
+		dayStats := c.aggregator.GetDayStats(day.Date)
+		if dayStats == nil {
+			continue
+		}
+
+		totalUploaded += dayStats.Uploaded
+
+		if !status.Unlocked && float64(totalUploaded) >= achievement.Threshold {
+			parsedDate, err := time.Parse("2006-01-02", day.Date)
+			if err == nil {
+				unlockedDate = &parsedDate
+				status.Unlocked = true
+				status.UnlockedAt = unlockedDate
+			}
+		}
+	}
+
+	status.CurrentValue = float64(totalUploaded)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkThreeBodyAchievement проверяет ровно 3 устройства за день
+func (c *Calculator) checkThreeBodyAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: 1,
+	}
+
+	calendarData := c.aggregator.GetCalendarData()
+
+	for _, day := range calendarData {
+		dayStats := c.aggregator.GetDayStats(day.Date)
+		if dayStats == nil {
+			continue
+		}
+
+		if len(dayStats.Devices) == 3 {
+			parsedDate, err := time.Parse("2006-01-02", day.Date)
+			if err == nil {
+				status.Unlocked = true
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = 1
+				status.Progress = 1.0
+				return status
+			}
+		}
+	}
+
+	status.CurrentValue = 0
+	status.Progress = 0
 
 	return status
 }

@@ -113,6 +113,10 @@ function Achievements() {
       if (isTarget) return 'Maybe'
       return value >= 1 ? 'Yes' : 'No'
     }
+    // Three body achievement - binary
+    if (achievementId === 'three_body') {
+      return value >= 1 ? 'Solved' : 'Unsolved'
+    }
     // ICMP and DNS achievements show packet counts with formatting
     return value.toLocaleString()
   }

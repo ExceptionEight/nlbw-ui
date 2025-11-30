@@ -42,6 +42,10 @@ const (
 
 	// Comeback achievements
 	AchievementMissMe = "miss_me"
+
+	// Easter eggs
+	AchievementThreeBody = "three_body"
+	AchievementOnFire    = "on_fire"
 )
 
 // Пороговые значения в байтах
@@ -66,6 +70,7 @@ const (
 const (
 	HundredMegabytes       = 100 * 1024 * 1024
 	OneHundredFortyThreeGB = 143 * OneGigabyte
+	FourFiftyOneGB         = 451 * OneGigabyte
 	TwentyDevices          = 20
 	NinetyDays             = 90
 )
@@ -233,6 +238,22 @@ func AllAchievements() []Achievement {
 			Description: "A device returns after 90+ days of absence",
 			Category:    CategoryNetwork,
 			Threshold:   NinetyDays,
+		},
+
+		// Категория: Easter eggs
+		{
+			ID:          AchievementThreeBody,
+			Name:        "3 Body Problem",
+			Description: "Have exactly 3 devices active in a single day",
+			Category:    CategoryNetwork,
+			Threshold:   3,
+		},
+		{
+			ID:          AchievementOnFire,
+			Name:        "I'm on Fire",
+			Description: "Upload 451 GB of data total",
+			Category:    CategoryData,
+			Threshold:   FourFiftyOneGB,
 		},
 	}
 }
