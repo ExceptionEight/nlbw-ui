@@ -534,14 +534,13 @@ function Dashboard({ dateRange }) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: isMobile ? 'rgba(0, 0, 0, 0.92)' : 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: isMobile ? 'none' : 'blur(10px)',
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(10px)',
               display: 'flex',
-              alignItems: isMobile ? 'stretch' : 'center',
+              alignItems: 'center',
               justifyContent: 'center',
               zIndex: 9999,
               padding: isMobile ? '0' : '20px',
-              overflowY: isMobile ? 'auto' : 'visible',
             }}
             onClick={() => setModalVisible(false)}
           >
@@ -554,15 +553,16 @@ function Dashboard({ dateRange }) {
               style={{
                 maxWidth: isMobile ? '100%' : '1200px',
                 width: '100%',
-                maxHeight: isMobile ? 'auto' : '90vh',
-                overflowY: isMobile ? 'visible' : 'auto',
-                position: 'relative',
+                height: isMobile ? '100vh' : 'auto',
+                maxHeight: isMobile ? '100vh' : '90vh',
+                overflowY: 'auto',
+                position: isMobile ? 'fixed' : 'relative',
+                top: isMobile ? 0 : 'auto',
+                left: isMobile ? 0 : 'auto',
+                right: isMobile ? 0 : 'auto',
+                bottom: isMobile ? 0 : 'auto',
                 borderRadius: isMobile ? '0' : '20px',
                 margin: isMobile ? '0' : undefined,
-                minHeight: isMobile ? '100vh' : 'auto',
-                background: isMobile ? 'transparent' : undefined,
-                border: isMobile ? 'none' : undefined,
-                boxShadow: isMobile ? 'none' : undefined,
               }}
             >
               {/* Header */}
