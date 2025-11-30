@@ -18,6 +18,8 @@ function Dashboard({ dateRange }) {
   const [protocolsLoading, setProtocolsLoading] = useState(false)
   const [availableDates, setAvailableDates] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [hoveredProtocol, setHoveredProtocol] = useState(null)
+  const [selectedProtocol, setSelectedProtocol] = useState(null)
 
   useEffect(() => {
     fetch('/api/calendar')
@@ -671,43 +673,155 @@ function Dashboard({ dateRange }) {
                       <h4 style={{ marginBottom: isMobile ? '12px' : '20px', fontSize: isMobile ? '14px' : '16px', fontWeight: '600' }}>
                         Traffic by Protocol
                       </h4>
-                      <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                        <PieChart>
-                          <Pie
-                            data={protocols.slice(0, 8).map((p, idx) => ({
-                              name: `${p.protocol}${p.port ? ':' + p.port : ''}`,
-                              value: p.downloaded + p.uploaded,
-                            }))}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => percent > 0.05 ? `${name} (${(percent * 100).toFixed(0)}%)` : ''}
-                            outerRadius={90}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {protocols.slice(0, 8).map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip
-                            contentStyle={{
-                              background: 'rgba(10, 14, 39, 0.95)',
-                              backdropFilter: 'blur(20px)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                              borderRadius: '12px',
-                              color: '#fff',
-                            }}
-                            itemStyle={{
-                              color: '#fff',
-                            }}
-                            labelStyle={{
-                              color: '#fff',
-                            }}
-                            formatter={(value) => formatBytes(value)}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+
+                      {/* Pie Chart with Custom Legend */}
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        alignItems: isMobile ? 'center' : 'flex-start',
+                        gap: isMobile ? '16px' : '24px',
+                      }}>
+                        {/* Pie Chart */}
+                        <div style={{
+                          flex: isMobile ? '0 0 auto' : '0 0 65%',
+                          width: isMobile ? '100%' : 'auto',
+                        }}>
+                          <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
+                            <PieChart
+                              onClick={(e) => {
+                                if (!e || !e.activeLabel) {
+                                  setSelectedProtocol(null)
+                                }
+                              }}
+                            >
+                              <Pie
+                                data={protocols.slice(0, 8).map((p, idx) => ({
+                                  name: `${p.protocol}${p.port ? ':' + p.port : ''}`,
+                                  value: p.downloaded + p.uploaded,
+                                }))}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                outerRadius={isMobile ? 80 : 100}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {protocols.slice(0, 8).map((entry, index) => {
+                                  const protocolName = `${entry.protocol}${entry.port ? ':' + entry.port : ''}`
+                                  const isActive = hoveredProtocol === protocolName || selectedProtocol === protocolName
+                                  const isDimmed = (hoveredProtocol && hoveredProtocol !== protocolName) || (selectedProtocol && selectedProtocol !== protocolName)
+
+                                  return (
+                                    <Cell
+                                      key={`cell-${index}`}
+                                      fill={COLORS[index % COLORS.length]}
+                                      opacity={isDimmed ? 0.3 : 1}
+                                      style={{
+                                        cursor: 'pointer',
+                                        transition: 'opacity 0.2s ease',
+                                      }}
+                                      onMouseEnter={() => setHoveredProtocol(protocolName)}
+                                      onMouseLeave={() => setHoveredProtocol(null)}
+                                      onClick={() => {
+                                        if (selectedProtocol === protocolName) {
+                                          setSelectedProtocol(null)
+                                        } else {
+                                          setSelectedProtocol(protocolName)
+                                        }
+                                      }}
+                                    />
+                                  )
+                                })}
+                              </Pie>
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* Custom Legend */}
+                        <div style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: isMobile ? '8px' : '10px',
+                          minWidth: 0,
+                        }}>
+                          {protocols.slice(0, 8).map((proto, index) => {
+                            const protocolName = `${proto.protocol}${proto.port ? ':' + proto.port : ''}`
+                            const totalTraffic = protocols.slice(0, 8).reduce((sum, p) => sum + p.downloaded + p.uploaded, 0)
+                            const percentage = ((proto.downloaded + proto.uploaded) / totalTraffic * 100).toFixed(1)
+                            const isActive = hoveredProtocol === protocolName || selectedProtocol === protocolName
+                            const isDimmed = (hoveredProtocol && hoveredProtocol !== protocolName) || (selectedProtocol && selectedProtocol !== protocolName)
+
+                            return (
+                              <motion.div
+                                key={index}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: isDimmed ? 0.3 : 1, x: 0 }}
+                                transition={{
+                                  delay: index * 0.05,
+                                  opacity: { duration: 0.2 }
+                                }}
+                                onMouseEnter={() => setHoveredProtocol(protocolName)}
+                                onMouseLeave={() => setHoveredProtocol(null)}
+                                onClick={() => {
+                                  if (selectedProtocol === protocolName) {
+                                    setSelectedProtocol(null)
+                                  } else {
+                                    setSelectedProtocol(protocolName)
+                                  }
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: isMobile ? '8px' : '12px',
+                                  padding: isMobile ? '6px 8px' : '8px 12px',
+                                  borderRadius: '8px',
+                                  background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                }}
+                                whileHover={!isMobile ? {
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                } : {}}
+                              >
+                                {/* Color indicator */}
+                                <div style={{
+                                  width: isMobile ? '10px' : '12px',
+                                  height: isMobile ? '10px' : '12px',
+                                  borderRadius: '50%',
+                                  background: COLORS[index % COLORS.length],
+                                  flexShrink: 0,
+                                  boxShadow: isActive ? `0 0 10px ${COLORS[index % COLORS.length]}` : 'none',
+                                  transition: 'box-shadow 0.2s ease',
+                                }} />
+
+                                {/* Protocol name */}
+                                <div style={{
+                                  flex: 1,
+                                  fontSize: isMobile ? '12px' : '13px',
+                                  fontWeight: isActive ? '600' : '500',
+                                  color: isActive ? '#fff' : '#c8c8c8',
+                                  transition: 'all 0.2s ease',
+                                  minWidth: 0,
+                                }}>
+                                  {protocolName}
+                                </div>
+
+                                {/* Percentage */}
+                                <div style={{
+                                  fontSize: isMobile ? '12px' : '13px',
+                                  fontWeight: '600',
+                                  color: isActive ? COLORS[index % COLORS.length] : 'var(--text-muted)',
+                                  transition: 'color 0.2s ease',
+                                  flexShrink: 0,
+                                }}>
+                                  {percentage}%
+                                </div>
+                              </motion.div>
+                            )
+                          })}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="gradient-card">
