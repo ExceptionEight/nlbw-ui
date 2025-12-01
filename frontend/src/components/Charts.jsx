@@ -12,6 +12,7 @@ function Charts({ dateRange }) {
   const [devices, setDevices] = useState([])
   const [selectedMacs, setSelectedMacs] = useState([])
   const [filterOpen, setFilterOpen] = useState(false)
+  const [filterMounted, setFilterMounted] = useState(false)
 
   useEffect(() => {
     fetchDevices()
@@ -20,6 +21,12 @@ function Charts({ dateRange }) {
   useEffect(() => {
     fetchTimeseries()
   }, [dateRange, selectedMacs])
+
+  useEffect(() => {
+    if (filterOpen && !filterMounted) {
+      setFilterMounted(true)
+    }
+  }, [filterOpen, filterMounted])
 
   const fetchDevices = async () => {
     try {
@@ -102,13 +109,133 @@ function Charts({ dateRange }) {
   }))
 
   return (
-    <div style={{ display: 'flex', gap: '24px' }}>
-      {/* Main Chart */}
+    <div style={{ position: 'relative' }}>
+      {/* Filter Panel - Desktop: сидит под графиком справа */}
+      {!isMobile && filterMounted && (
+        <div
+          className="glass-card"
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '300px',
+            zIndex: 1,
+            opacity: filterOpen ? 1 : 0,
+            transform: filterOpen ? 'translateX(0)' : 'translateX(30px)',
+            transition: 'opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1)',
+            pointerEvents: filterOpen ? 'auto' : 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{
+              fontSize: '18px',
+              fontWeight: '700',
+              background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              marginBottom: '8px',
+            }}>
+              Filter Devices
+            </h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
+              Select devices to visualize
+            </p>
+          </div>
+
+          {selectedMacs.length > 0 && (
+            <button
+              onClick={() => setSelectedMacs([])}
+              className="modern-button"
+              style={{
+                width: '100%',
+                marginBottom: '16px',
+                background: 'rgba(255, 16, 240, 0.1)',
+                border: '1px solid rgba(255, 16, 240, 0.3)',
+              }}
+            >
+              Clear All
+            </button>
+          )}
+
+          <div style={{ flex: 1, overflowY: 'auto', marginRight: '-10px', paddingRight: '10px' }}>
+            {devices.map((device) => {
+              const isSelected = selectedMacs.includes(device.mac)
+
+              return (
+                <motion.div
+                  key={device.mac}
+                  onClick={() => handleDeviceToggle(device.mac)}
+                  style={{
+                    background: isSelected ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${isSelected ? 'rgba(0, 245, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    marginBottom: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                  whileHover={{
+                    backgroundColor: isSelected ? 'rgba(0, 245, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  }}
+                  transition={{ duration: 0 }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: isSelected ? '#00f5ff' : '#fff',
+                      marginBottom: '4px',
+                    }}>
+                      {device.friendly_name}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: 'var(--text-muted)',
+                    }}>
+                      {formatBytes(device.total)}
+                    </div>
+                  </div>
+
+                  {isSelected && (
+                    <div
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Check size={14} color="#fff" />
+                    </div>
+                  )}
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Main Chart - поверх, сужается влево при открытии фильтра */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className="glass-card"
-        style={{ flex: 1 }}
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          width: !isMobile && filterOpen ? 'calc(100% - 324px)' : '100%',
+          transition: 'width 0.45s cubic-bezier(0.34, 1.3, 0.64, 1)',
+        }}
       >
         <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -204,126 +331,6 @@ function Charts({ dateRange }) {
           </AreaChart>
         </ResponsiveContainer>
       </motion.div>
-
-      {/* Filter Panel - Desktop */}
-      {!isMobile && (
-        <AnimatePresence>
-          {filterOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 100 }}
-              className="glass-card"
-              style={{
-                width: '300px',
-                maxHeight: '600px',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <div style={{ marginBottom: '20px' }}>
-                <h4 style={{
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  background: 'linear-gradient(135deg, #b24bf3, #ff10f0)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  marginBottom: '8px',
-                }}>
-                  Filter Devices
-                </h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
-                  Select devices to visualize
-                </p>
-              </div>
-
-              {selectedMacs.length > 0 && (
-                <button
-                  onClick={() => setSelectedMacs([])}
-                  className="modern-button"
-                  style={{
-                    width: '100%',
-                    marginBottom: '16px',
-                    background: 'rgba(255, 16, 240, 0.1)',
-                    border: '1px solid rgba(255, 16, 240, 0.3)',
-                  }}
-                >
-                  Clear All
-                </button>
-              )}
-
-              <div style={{ flex: 1, overflowY: 'auto', marginRight: '-10px', paddingRight: '10px' }}>
-                {devices.map((device, index) => {
-                  const isSelected = selectedMacs.includes(device.mac)
-
-                  return (
-                    <motion.div
-                      key={device.mac}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      onClick={() => handleDeviceToggle(device.mac)}
-                      style={{
-                        background: isSelected ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                        border: `1px solid ${isSelected ? 'rgba(0, 245, 255, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`,
-                        borderRadius: '12px',
-                        padding: '12px',
-                        marginBottom: '8px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                      whileHover={{
-                        scale: 1.02,
-                        backgroundColor: isSelected ? 'rgba(0, 245, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <div style={{
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          color: isSelected ? '#00f5ff' : '#fff',
-                          marginBottom: '4px',
-                        }}>
-                          {device.friendly_name}
-                        </div>
-                        <div style={{
-                          fontSize: '12px',
-                          color: 'var(--text-muted)',
-                        }}>
-                          {formatBytes(device.total)}
-                        </div>
-                      </div>
-
-                      {isSelected && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Check size={14} color="#fff" />
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  )
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
 
       {/* Filter Panel - Mobile Fullscreen */}
       {isMobile && (
