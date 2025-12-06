@@ -166,9 +166,8 @@ function Dashboard({ dateRange }) {
 
   const topDevices = allDevices.slice(0, 10)
 
-  const maxNameLength = isMobile ? 8 : 15
   const topDevicesChart = topDevices.map((d) => ({
-    name: d.friendly_name.length > maxNameLength ? d.friendly_name.substring(0, maxNameLength) + '...' : d.friendly_name,
+    name: d.friendly_name,
     Downloaded: d.downloaded,
     Uploaded: d.uploaded,
   }))
@@ -348,6 +347,10 @@ function Dashboard({ dateRange }) {
               angle={-45}
               textAnchor="end"
               height={isMobile ? 70 : 100}
+              tickFormatter={(value) => {
+                const maxLen = isMobile ? 14 : 19
+                return value.length > maxLen ? value.substring(0, maxLen) + '...' : value
+              }}
             />
             <YAxis
               stroke="var(--text-secondary)"
