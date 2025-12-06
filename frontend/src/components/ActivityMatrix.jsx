@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, TrendingUp, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
+import { Calendar, TrendingUp, ArrowDown, ArrowUp, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
 import HeatMap from '@uiw/react-heat-map'
 import dayjs from 'dayjs'
 import { formatBytes } from '../utils/format'
@@ -188,6 +188,7 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
   const dataByYear = {}
   const dataByYearForMobile = {}
   const monthlyStats = {} // { 'YYYY-MM': { downloaded, uploaded } }
+  const yearlyStats = {} // { 'YYYY': { downloaded, uploaded } }
   let totalTraffic = 0
   let activeDays = 0
 
@@ -211,6 +212,13 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
     }
     monthlyStats[monthKey].downloaded += item.downloaded || 0
     monthlyStats[monthKey].uploaded += item.uploaded || 0
+
+    // Aggregate yearly stats
+    if (!yearlyStats[year]) {
+      yearlyStats[year] = { downloaded: 0, uploaded: 0 }
+    }
+    yearlyStats[year].downloaded += item.downloaded || 0
+    yearlyStats[year].uploaded += item.uploaded || 0
     
     // For desktop view - only days with data
     if (item.value > 0) {
@@ -394,21 +402,45 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
           className="glass-card"
           style={{ marginBottom: isMobile ? '24px' : '40px' }}
         >
-          <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
-            <h3 style={{
-              fontSize: isMobile ? '18px' : '24px',
-              fontWeight: '700',
-              background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              marginBottom: '8px',
+          <div style={{ 
+            marginBottom: isMobile ? '16px' : '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}>
+            <div>
+              <h3 style={{
+                fontSize: isMobile ? '18px' : '24px',
+                fontWeight: '700',
+                background: 'linear-gradient(135deg, #00f5ff, #b24bf3)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                marginBottom: '8px',
+              }}>
+                {year}
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? '12px' : '14px', margin: 0 }}>
+                Tap any day to view details
+              </p>
+            </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: isMobile ? '2px' : '4px',
+              fontSize: isMobile ? '12px' : '14px',
+              fontWeight: '500',
             }}>
-              {year}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: isMobile ? '12px' : '14px', margin: 0 }}>
-              Tap any day to view details
-            </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#23d2ee' }}>
+                <ArrowDown size={isMobile ? 12 : 14} />
+                <span>{formatBytes(yearlyStats[year]?.downloaded || 0)}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#c084fc' }}>
+                <ArrowUp size={isMobile ? 12 : 14} />
+                <span>{formatBytes(yearlyStats[year]?.uploaded || 0)}</span>
+              </div>
+            </div>
           </div>
 
           {isMobile ? (

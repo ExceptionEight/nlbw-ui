@@ -561,8 +561,8 @@ function Dashboard({ dateRange }) {
               style={{
                 maxWidth: isMobile ? '100%' : '1200px',
                 width: '100%',
-                height: isMobile ? '100vh' : 'auto',
-                maxHeight: isMobile ? '100vh' : '90vh',
+                height: isMobile ? '100%' : 'auto',
+                maxHeight: isMobile ? '100%' : '90vh',
                 overflowY: 'auto',
                 position: isMobile ? 'fixed' : 'relative',
                 top: isMobile ? 0 : 'auto',
@@ -804,11 +804,8 @@ function Dashboard({ dateRange }) {
                               <motion.div
                                 key={index}
                                 initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: isDimmed ? 0.3 : 1, x: 0 }}
-                                transition={{
-                                  delay: index * 0.05,
-                                  opacity: { duration: 0.2 }
-                                }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.05 }}
                                 onMouseEnter={() => setHoveredProtocol(protocolName)}
                                 onMouseLeave={() => setHoveredProtocol(null)}
                                 onClick={(e) => {
@@ -828,7 +825,9 @@ function Dashboard({ dateRange }) {
                                   borderRadius: '8px',
                                   background: isActive ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
+                                  transition: 'opacity 0.2s ease, background 0.2s ease',
+                                  opacity: isDimmed ? 0.3 : 1,
+                                  willChange: 'opacity',
                                 }}
                                 whileHover={!isMobile ? {
                                   background: 'rgba(255, 255, 255, 0.05)',
