@@ -329,7 +329,7 @@ function Dashboard({ dateRange }) {
         </h3>
 
         <ResponsiveContainer width="100%" height={isMobile ? 280 : 400}>
-          <BarChart data={topDevicesChart}>
+          <BarChart data={topDevicesChart} margin={{ top: 5, right: 5, bottom: 5, left: -15 }}>
             <defs>
               <linearGradient id="downloadGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#00f2fe" stopOpacity={0.8} />
@@ -352,6 +352,7 @@ function Dashboard({ dateRange }) {
             <YAxis
               stroke="var(--text-secondary)"
               fontSize={12}
+              width={80}
               tickFormatter={(value) => formatBytes(value)}
             />
             <Tooltip
