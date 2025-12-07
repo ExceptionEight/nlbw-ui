@@ -14,6 +14,7 @@ type Calculator struct {
 	cache      *cache.Cache
 	aggregator *aggregator.Aggregator
 	config     *config.Config
+	achCache   *AchievementCache
 }
 
 // NewCalculator создаёт новый калькулятор достижений
@@ -22,6 +23,7 @@ func NewCalculator(c *cache.Cache, agg *aggregator.Aggregator, cfg *config.Confi
 		cache:      c,
 		aggregator: agg,
 		config:     cfg,
+		achCache:   NewAchievementCache(),
 	}
 }
 
@@ -54,6 +56,19 @@ func (c *Calculator) GetNetworkAchievements() *NetworkAchievements {
 
 // checkAchievement проверяет конкретное достижение для всей сети
 func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus {
+	// Сначала проверяем кэш: если ачивка уже разблокирована, возвращаем из кэша
+	if cached, ok := c.achCache.Get(achievement.ID); ok {
+		unlockedAt := cached.UnlockedAt
+		return AchievementStatus{
+			Achievement:  achievement,
+			Unlocked:     true,
+			UnlockedAt:   &unlockedAt,
+			Progress:     1.0,
+			CurrentValue: cached.CurrentValue,
+			TargetValue:  cached.TargetValue,
+		}
+	}
+
 	status := AchievementStatus{
 		Achievement:  achievement,
 		Unlocked:     false,
@@ -65,33 +80,38 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 	switch achievement.ID {
 	case AchievementFirstGigabyte, AchievementDataHoarder, AchievementTerabyteClub,
 		AchievementHundredTerabyte, AchievementPetabyteClub, AchievementWhatTheFuck:
-		return c.checkTotalTrafficAchievement(achievement)
+		status = c.checkTotalTrafficAchievement(achievement)
 	case AchievementDailyBurner:
-		return c.checkDailyBurnerAchievement(achievement)
+		status = c.checkDailyBurnerAchievement(achievement)
 	case AchievementWeekWarrior, AchievementMonthlyActive:
-		return c.checkConsecutiveDaysAchievement(achievement)
+		status = c.checkConsecutiveDaysAchievement(achievement)
 	case AchievementNetworkGrowth:
-		return c.checkNetworkGrowthAchievement(achievement)
+		status = c.checkNetworkGrowthAchievement(achievement)
 	case AchievementPingOfDeath, AchievementUptimeKuma, AchievementSmurfAttack:
-		return c.checkICMPPacketsAchievement(achievement)
+		status = c.checkICMPPacketsAchievement(achievement)
 	case AchievementRedEyed:
-		return c.checkSSHTrafficAchievement(achievement)
+		status = c.checkSSHTrafficAchievement(achievement)
 	case AchievementWhatYear:
-		return c.checkFTPTrafficAchievement(achievement)
+		status = c.checkFTPTrafficAchievement(achievement)
 	case AchievementISeekYou:
-		return c.checkDNSQueriesAchievement(achievement)
+		status = c.checkDNSQueriesAchievement(achievement)
 	case AchievementGhost:
-		return c.checkGhostMacAchievement(achievement)
+		status = c.checkGhostMacAchievement(achievement)
 	case AchievementSlumberParty:
-		return c.checkSlumberPartyAchievement(achievement)
+		status = c.checkSlumberPartyAchievement(achievement)
 	case AchievementILoveYou:
-		return c.checkILoveYouAchievement(achievement)
+		status = c.checkILoveYouAchievement(achievement)
 	case AchievementMissMe:
-		return c.checkMissMeAchievement(achievement)
+		status = c.checkMissMeAchievement(achievement)
 	case AchievementThreeBody:
-		return c.checkThreeBodyAchievement(achievement)
+		status = c.checkThreeBodyAchievement(achievement)
 	case AchievementOnFire:
-		return c.checkOnFireAchievement(achievement)
+		status = c.checkOnFireAchievement(achievement)
+	}
+
+	// Если ачивка разблокирована - сохраняем в кэш
+	if status.Unlocked && status.UnlockedAt != nil {
+		c.achCache.Set(achievement.ID, *status.UnlockedAt, status.CurrentValue, status.TargetValue)
 	}
 
 	return status
@@ -105,7 +125,6 @@ func (c *Calculator) checkTotalTrafficAchievement(achievement Achievement) Achie
 	}
 
 	totalTraffic := uint64(0)
-	var unlockedDate *time.Time
 
 	// Получаем все дни с данными, отсортированные по дате
 	calendarData := c.aggregator.GetCalendarData(nil)
@@ -121,12 +140,14 @@ func (c *Calculator) checkTotalTrafficAchievement(achievement Achievement) Achie
 		totalTraffic += dayTraffic
 
 		// Проверяем, когда достижение было разблокировано
-		if !status.Unlocked && float64(totalTraffic) >= achievement.Threshold {
+		if float64(totalTraffic) >= achievement.Threshold {
 			parsedDate, err := time.Parse("2006-01-02", day.Date)
 			if err == nil {
-				unlockedDate = &parsedDate
 				status.Unlocked = true
-				status.UnlockedAt = unlockedDate
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = float64(totalTraffic)
+				status.Progress = 1.0
+				return status
 			}
 		}
 	}
@@ -148,7 +169,6 @@ func (c *Calculator) checkOnFireAchievement(achievement Achievement) Achievement
 	}
 
 	totalUploaded := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 
@@ -160,12 +180,14 @@ func (c *Calculator) checkOnFireAchievement(achievement Achievement) Achievement
 
 		totalUploaded += dayStats.Uploaded
 
-		if !status.Unlocked && float64(totalUploaded) >= achievement.Threshold {
+		if float64(totalUploaded) >= achievement.Threshold {
 			parsedDate, err := time.Parse("2006-01-02", day.Date)
 			if err == nil {
-				unlockedDate = &parsedDate
 				status.Unlocked = true
-				status.UnlockedAt = unlockedDate
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = float64(totalUploaded)
+				status.Progress = 1.0
+				return status
 			}
 		}
 	}
@@ -274,7 +296,6 @@ func (c *Calculator) checkSlumberPartyAchievement(achievement Achievement) Achie
 	}
 
 	maxDevices := 0
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 
@@ -289,12 +310,14 @@ func (c *Calculator) checkSlumberPartyAchievement(achievement Achievement) Achie
 			maxDevices = deviceCount
 		}
 
-		if !status.Unlocked && float64(deviceCount) >= achievement.Threshold {
+		if float64(deviceCount) >= achievement.Threshold {
 			parsedDate, err := time.Parse("2006-01-02", day.Date)
 			if err == nil {
-				unlockedDate = &parsedDate
 				status.Unlocked = true
-				status.UnlockedAt = unlockedDate
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = float64(deviceCount)
+				status.Progress = 1.0
+				return status
 			}
 		}
 	}
@@ -316,7 +339,6 @@ func (c *Calculator) checkILoveYouAchievement(achievement Achievement) Achieveme
 	}
 
 	maxDailyTraffic := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 
@@ -331,12 +353,14 @@ func (c *Calculator) checkILoveYouAchievement(achievement Achievement) Achieveme
 			maxDailyTraffic = dailyTraffic
 		}
 
-		if !status.Unlocked && float64(dailyTraffic) >= achievement.Threshold {
+		if float64(dailyTraffic) >= achievement.Threshold {
 			parsedDate, err := time.Parse("2006-01-02", day.Date)
 			if err == nil {
-				unlockedDate = &parsedDate
 				status.Unlocked = true
-				status.UnlockedAt = unlockedDate
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = float64(dailyTraffic)
+				status.Progress = 1.0
+				return status
 			}
 		}
 	}
@@ -358,7 +382,6 @@ func (c *Calculator) checkFTPTrafficAchievement(achievement Achievement) Achieve
 	}
 
 	totalTraffic := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
@@ -370,7 +393,6 @@ func (c *Calculator) checkFTPTrafficAchievement(achievement Achievement) Achieve
 				continue
 			}
 
-			dayTraffic := uint64(0)
 			for _, row := range data.Data {
 				if len(row) < 9 {
 					continue
@@ -385,18 +407,18 @@ func (c *Calculator) checkFTPTrafficAchievement(achievement Achievement) Achieve
 				if port == 21 {
 					rxBytes, _ := row[6].(uint64)
 					txBytes, _ := row[8].(uint64)
-					dayTraffic += rxBytes + txBytes
+					totalTraffic += rxBytes + txBytes
 				}
 			}
 
-			totalTraffic += dayTraffic
-
-			if !status.Unlocked && float64(totalTraffic) >= achievement.Threshold {
+			if float64(totalTraffic) >= achievement.Threshold {
 				parsedDate, err := time.Parse("2006-01-02", day.Date)
 				if err == nil {
-					unlockedDate = &parsedDate
 					status.Unlocked = true
-					status.UnlockedAt = unlockedDate
+					status.UnlockedAt = &parsedDate
+					status.CurrentValue = float64(totalTraffic)
+					status.Progress = 1.0
+					return status
 				}
 			}
 		}
@@ -419,7 +441,6 @@ func (c *Calculator) checkDNSQueriesAchievement(achievement Achievement) Achieve
 	}
 
 	totalQueries := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
@@ -431,7 +452,6 @@ func (c *Calculator) checkDNSQueriesAchievement(achievement Achievement) Achieve
 				continue
 			}
 
-			dayQueries := uint64(0)
 			for _, row := range data.Data {
 				if len(row) < 10 {
 					continue
@@ -446,18 +466,18 @@ func (c *Calculator) checkDNSQueriesAchievement(achievement Achievement) Achieve
 				if port == 53 {
 					rxPkts, _ := row[7].(uint64)
 					txPkts, _ := row[9].(uint64)
-					dayQueries += rxPkts + txPkts
+					totalQueries += rxPkts + txPkts
 				}
 			}
 
-			totalQueries += dayQueries
-
-			if !status.Unlocked && float64(totalQueries) >= achievement.Threshold {
+			if float64(totalQueries) >= achievement.Threshold {
 				parsedDate, err := time.Parse("2006-01-02", day.Date)
 				if err == nil {
-					unlockedDate = &parsedDate
 					status.Unlocked = true
-					status.UnlockedAt = unlockedDate
+					status.UnlockedAt = &parsedDate
+					status.CurrentValue = float64(totalQueries)
+					status.Progress = 1.0
+					return status
 				}
 			}
 		}
@@ -535,7 +555,6 @@ func (c *Calculator) checkDailyBurnerAchievement(achievement Achievement) Achiev
 	}
 
 	maxDailyTraffic := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 
@@ -551,12 +570,14 @@ func (c *Calculator) checkDailyBurnerAchievement(achievement Achievement) Achiev
 		}
 
 		// Проверяем разблокировку
-		if !status.Unlocked && float64(dailyTraffic) >= achievement.Threshold {
+		if float64(dailyTraffic) >= achievement.Threshold {
 			parsedDate, err := time.Parse("2006-01-02", day.Date)
 			if err == nil {
-				unlockedDate = &parsedDate
 				status.Unlocked = true
-				status.UnlockedAt = unlockedDate
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = float64(dailyTraffic)
+				status.Progress = 1.0
+				return status
 			}
 		}
 	}
@@ -580,7 +601,6 @@ func (c *Calculator) checkConsecutiveDaysAchievement(achievement Achievement) Ac
 	calendarData := c.aggregator.GetCalendarData(nil)
 	maxStreak := 0
 	currentStreak := 0
-	var unlockedDate *time.Time
 	var lastDate time.Time
 
 	for _, day := range calendarData {
@@ -604,10 +624,12 @@ func (c *Calculator) checkConsecutiveDaysAchievement(achievement Achievement) Ac
 				}
 
 				// Проверяем разблокировку
-				if !status.Unlocked && currentStreak >= int(achievement.Threshold) {
-					unlockedDate = &currentDate
+				if currentStreak >= int(achievement.Threshold) {
 					status.Unlocked = true
-					status.UnlockedAt = unlockedDate
+					status.UnlockedAt = &currentDate
+					status.CurrentValue = float64(currentStreak)
+					status.Progress = 1.0
+					return status
 				}
 			} else {
 				currentStreak = 1
@@ -637,7 +659,6 @@ func (c *Calculator) checkNetworkGrowthAchievement(achievement Achievement) Achi
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 	maxDevices := 0
-	var unlockedDate *time.Time
 
 	// Проходим по всем дням и находим максимальное количество уникальных устройств
 	for _, day := range calendarData {
@@ -652,12 +673,14 @@ func (c *Calculator) checkNetworkGrowthAchievement(achievement Achievement) Achi
 		}
 
 		// Проверяем разблокировку
-		if !status.Unlocked && float64(deviceCount) >= achievement.Threshold {
+		if float64(deviceCount) >= achievement.Threshold {
 			parsedDate, err := time.Parse("2006-01-02", day.Date)
 			if err == nil {
-				unlockedDate = &parsedDate
 				status.Unlocked = true
-				status.UnlockedAt = unlockedDate
+				status.UnlockedAt = &parsedDate
+				status.CurrentValue = float64(deviceCount)
+				status.Progress = 1.0
+				return status
 			}
 		}
 	}
@@ -679,7 +702,6 @@ func (c *Calculator) checkICMPPacketsAchievement(achievement Achievement) Achiev
 	}
 
 	totalPackets := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
@@ -693,7 +715,6 @@ func (c *Calculator) checkICMPPacketsAchievement(achievement Achievement) Achiev
 			}
 
 			// Считаем ICMP пакеты
-			dayPackets := uint64(0)
 			for _, row := range data.Data {
 				if len(row) < 10 {
 					continue
@@ -708,19 +729,19 @@ func (c *Calculator) checkICMPPacketsAchievement(achievement Achievement) Achiev
 				if strings.ToLower(proto) == "icmp" {
 					rxPkts, _ := row[7].(uint64)
 					txPkts, _ := row[9].(uint64)
-					dayPackets += rxPkts + txPkts
+					totalPackets += rxPkts + txPkts
 				}
 			}
 
-			totalPackets += dayPackets
-
 			// Проверяем разблокировку
-			if !status.Unlocked && float64(totalPackets) >= achievement.Threshold {
+			if float64(totalPackets) >= achievement.Threshold {
 				parsedDate, err := time.Parse("2006-01-02", day.Date)
 				if err == nil {
-					unlockedDate = &parsedDate
 					status.Unlocked = true
-					status.UnlockedAt = unlockedDate
+					status.UnlockedAt = &parsedDate
+					status.CurrentValue = float64(totalPackets)
+					status.Progress = 1.0
+					return status
 				}
 			}
 		}
@@ -743,7 +764,6 @@ func (c *Calculator) checkSSHTrafficAchievement(achievement Achievement) Achieve
 	}
 
 	totalTraffic := uint64(0)
-	var unlockedDate *time.Time
 
 	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
@@ -757,7 +777,6 @@ func (c *Calculator) checkSSHTrafficAchievement(achievement Achievement) Achieve
 			}
 
 			// Считаем SSH трафик
-			dayTraffic := uint64(0)
 			for _, row := range data.Data {
 				if len(row) < 9 {
 					continue
@@ -772,19 +791,19 @@ func (c *Calculator) checkSSHTrafficAchievement(achievement Achievement) Achieve
 				if port == 22 {
 					rxBytes, _ := row[6].(uint64)
 					txBytes, _ := row[8].(uint64)
-					dayTraffic += rxBytes + txBytes
+					totalTraffic += rxBytes + txBytes
 				}
 			}
 
-			totalTraffic += dayTraffic
-
 			// Проверяем разблокировку
-			if !status.Unlocked && float64(totalTraffic) >= achievement.Threshold {
+			if float64(totalTraffic) >= achievement.Threshold {
 				parsedDate, err := time.Parse("2006-01-02", day.Date)
 				if err == nil {
-					unlockedDate = &parsedDate
 					status.Unlocked = true
-					status.UnlockedAt = unlockedDate
+					status.UnlockedAt = &parsedDate
+					status.CurrentValue = float64(totalTraffic)
+					status.Progress = 1.0
+					return status
 				}
 			}
 		}
