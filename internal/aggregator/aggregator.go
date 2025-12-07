@@ -72,13 +72,29 @@ func (a *Aggregator) ExtractDateFromFilename(filename string) string {
 }
 
 // GetCalendarData возвращает данные для матрицы активности
-func (a *Aggregator) GetCalendarData() []CalendarDay {
+// Если macs не пуст, то фильтрует по устройствам
+func (a *Aggregator) GetCalendarData(macs []string) []CalendarDay {
 	allData := a.cache.GetAll()
 	result := make([]CalendarDay, 0)
 
+	// Создаём set для быстрого поиска MAC-адресов
+	macSet := make(map[string]bool)
+	for _, mac := range macs {
+		macSet[strings.ToLower(mac)] = true
+	}
+	filterByMacs := len(macs) > 0
+
 	for path, data := range allData {
 		date := a.ExtractDateFromFilename(path)
-		downloaded, uploaded := a.calculateTrafficSplit(data)
+		var downloaded, uploaded uint64
+
+		if filterByMacs {
+			// Фильтруем только по выбранным устройствам
+			downloaded, uploaded = a.calculateTrafficSplitFiltered(data, macSet)
+		} else {
+			// Все устройства
+			downloaded, uploaded = a.calculateTrafficSplit(data)
+		}
 		total := downloaded + uploaded
 
 		result = append(result, CalendarDay{
@@ -207,6 +223,27 @@ func (a *Aggregator) calculateTrafficSplit(data *converter.TrafficData) (uint64,
 	var downloaded, uploaded uint64
 	for _, row := range data.Data {
 		if len(row) > 8 {
+			if rxBytes, ok := row[6].(uint64); ok {
+				downloaded += rxBytes
+			}
+			if txBytes, ok := row[8].(uint64); ok {
+				uploaded += txBytes
+			}
+		}
+	}
+	return downloaded, uploaded
+}
+
+func (a *Aggregator) calculateTrafficSplitFiltered(data *converter.TrafficData, macSet map[string]bool) (uint64, uint64) {
+	var downloaded, uploaded uint64
+	for _, row := range data.Data {
+		if len(row) > 8 {
+			// Проверяем MAC-адрес (row[3])
+			if mac, ok := row[3].(string); ok {
+				if !macSet[strings.ToLower(mac)] {
+					continue
+				}
+			}
 			if rxBytes, ok := row[6].(uint64); ok {
 				downloaded += rxBytes
 			}

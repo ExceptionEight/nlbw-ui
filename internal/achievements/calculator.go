@@ -108,7 +108,7 @@ func (c *Calculator) checkTotalTrafficAchievement(achievement Achievement) Achie
 	var unlockedDate *time.Time
 
 	// Получаем все дни с данными, отсортированные по дате
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -150,7 +150,7 @@ func (c *Calculator) checkOnFireAchievement(achievement Achievement) Achievement
 	totalUploaded := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -186,7 +186,7 @@ func (c *Calculator) checkThreeBodyAchievement(achievement Achievement) Achievem
 		TargetValue: 1,
 	}
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -222,7 +222,7 @@ func (c *Calculator) checkMissMeAchievement(achievement Achievement) Achievement
 	// Собираем даты активности для каждого MAC
 	macDates := make(map[string][]time.Time)
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -276,7 +276,7 @@ func (c *Calculator) checkSlumberPartyAchievement(achievement Achievement) Achie
 	maxDevices := 0
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -318,7 +318,7 @@ func (c *Calculator) checkILoveYouAchievement(achievement Achievement) Achieveme
 	maxDailyTraffic := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -360,7 +360,7 @@ func (c *Calculator) checkFTPTrafficAchievement(achievement Achievement) Achieve
 	totalTraffic := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
 
 	for _, day := range calendarData {
@@ -421,7 +421,7 @@ func (c *Calculator) checkDNSQueriesAchievement(achievement Achievement) Achieve
 	totalQueries := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
 
 	for _, day := range calendarData {
@@ -481,7 +481,7 @@ func (c *Calculator) checkGhostMacAchievement(achievement Achievement) Achieveme
 
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
 
 	for _, day := range calendarData {
@@ -537,7 +537,7 @@ func (c *Calculator) checkDailyBurnerAchievement(achievement Achievement) Achiev
 	maxDailyTraffic := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 
 	for _, day := range calendarData {
 		dayStats := c.aggregator.GetDayStats(day.Date)
@@ -577,7 +577,7 @@ func (c *Calculator) checkConsecutiveDaysAchievement(achievement Achievement) Ac
 		TargetValue: achievement.Threshold,
 	}
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	maxStreak := 0
 	currentStreak := 0
 	var unlockedDate *time.Time
@@ -635,7 +635,7 @@ func (c *Calculator) checkNetworkGrowthAchievement(achievement Achievement) Achi
 		TargetValue: achievement.Threshold,
 	}
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	maxDevices := 0
 	var unlockedDate *time.Time
 
@@ -681,7 +681,7 @@ func (c *Calculator) checkICMPPacketsAchievement(achievement Achievement) Achiev
 	totalPackets := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
 
 	for _, day := range calendarData {
@@ -745,7 +745,7 @@ func (c *Calculator) checkSSHTrafficAchievement(achievement Achievement) Achieve
 	totalTraffic := uint64(0)
 	var unlockedDate *time.Time
 
-	calendarData := c.aggregator.GetCalendarData()
+	calendarData := c.aggregator.GetCalendarData(nil)
 	allData := c.cache.GetAll()
 
 	for _, day := range calendarData {

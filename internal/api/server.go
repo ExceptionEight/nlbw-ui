@@ -83,8 +83,16 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 }
 
 // GET /api/calendar - данные для матрицы активности
+// Опциональный параметр: macs=mac1,mac2 для фильтрации по устройствам
 func (s *Server) handleGetCalendar(w http.ResponseWriter, r *http.Request) {
-	data := s.aggregator.GetCalendarData()
+	macsParam := r.URL.Query().Get("macs")
+
+	var macs []string
+	if macsParam != "" {
+		macs = strings.Split(macsParam, ",")
+	}
+
+	data := s.aggregator.GetCalendarData(macs)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }

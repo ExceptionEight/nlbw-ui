@@ -16,6 +16,7 @@ import Charts from './components/Charts'
 import Comparison from './components/Comparison'
 import Achievements from './components/Achievements'
 import DateRangePicker from './components/DateRangePicker'
+import DeviceFilterPicker from './components/DeviceFilterPicker'
 
 // Mobile breakpoint - covers phones and small tablets
 export const MOBILE_BREAKPOINT = 768
@@ -41,23 +42,58 @@ function App() {
   ])
   const [availableDates, setAvailableDates] = useState([])
   const [minMaxDates, setMinMaxDates] = useState(null)
+  
+  // Activity filter state
+  const [activitySelectedMacs, setActivitySelectedMacs] = useState([])
+  const [activityDevices, setActivityDevices] = useState([])
 
   useEffect(() => {
-    fetch('/api/calendar')
-      .then(res => res.json())
-      .then(data => {
-        const dates = data.filter(d => d.value > 0).map(d => d.date).sort()
+    const init = async () => {
+      try {
+        // Load calendar first
+        const calendarRes = await fetch('/api/calendar')
+        const calendarData = await calendarRes.json()
+        
+        const dates = calendarData.filter(d => d.value > 0).map(d => d.date).sort()
         setAvailableDates(dates)
 
         if (dates.length > 0) {
           const min = dayjs(dates[0])
           const max = dayjs(dates[dates.length - 1])
           setMinMaxDates({ min, max })
-          // Set default date range to all available dates
           setDateRange([min, max])
+
+          // Immediately fetch devices (no extra render cycle)
+          const from = min.format('YYYY-MM-DD')
+          const to = max.format('YYYY-MM-DD')
+          const summaryRes = await fetch(`/api/summary?from=${from}&to=${to}`)
+          const summaryData = await summaryRes.json()
+          
+          const deviceStats = {}
+          summaryData.days?.forEach((day) => {
+            if (day.devices) {
+              Object.values(day.devices).forEach((device) => {
+                const key = device.mac
+                if (!deviceStats[key]) {
+                  deviceStats[key] = {
+                    mac: device.mac,
+                    friendly_name: device.friendly_name,
+                    total: 0,
+                  }
+                }
+                deviceStats[key].total += device.downloaded + device.uploaded
+              })
+            }
+          })
+          const devicesArray = Object.values(deviceStats).sort((a, b) => b.total - a.total)
+          setActivityDevices(devicesArray)
         }
-      })
-      .catch(err => console.error('Failed to fetch available dates:', err))
+      } catch (err) {
+        console.error('Failed to initialize:', err)
+      }
+    }
+    
+    init()
   }, [])
 
   const tabs = [
@@ -73,7 +109,7 @@ function App() {
       case 'dashboard':
         return <Dashboard dateRange={dateRange} />
       case 'activity':
-        return <ActivityMatrix setActiveTab={setActiveTab} setDateRange={setDateRange} />
+        return <ActivityMatrix setActiveTab={setActiveTab} setDateRange={setDateRange} selectedMacs={activitySelectedMacs} />
       case 'achievements':
         return <Achievements />
       case 'charts':
@@ -145,6 +181,20 @@ function App() {
                 dateRange={dateRange}
                 onChange={setDateRange}
                 availableDates={availableDates}
+              />
+            </motion.div>
+          )}
+
+          {/* Device Filter for Activity */}
+          {activeTab === 'activity' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <DeviceFilterPicker
+                selectedMacs={activitySelectedMacs}
+                onChange={setActivitySelectedMacs}
+                availableDevices={activityDevices}
               />
             </motion.div>
           )}

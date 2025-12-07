@@ -323,19 +323,20 @@ function DesktopYearHeatmap({ year, dataByYear, monthlyStats, getColorLevel, han
   )
 }
 
-function ActivityMatrix({ setActiveTab, setDateRange }) {
+function ActivityMatrix({ setActiveTab, setDateRange, selectedMacs = [] }) {
   const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
   const [calendarData, setCalendarData] = useState([])
 
   useEffect(() => {
     fetchCalendarData()
-  }, [])
+  }, [selectedMacs])
 
   const fetchCalendarData = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/calendar')
+      const macsParam = selectedMacs.length > 0 ? `?macs=${selectedMacs.join(',')}` : ''
+      const response = await fetch(`/api/calendar${macsParam}`)
       const data = await response.json()
       setCalendarData(data)
     } catch (error) {
