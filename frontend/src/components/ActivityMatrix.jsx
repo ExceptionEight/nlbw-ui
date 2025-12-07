@@ -139,6 +139,190 @@ function MobileMonthCalendar({ year, month, data, onDayClick, getColorLevel, mon
   )
 }
 
+// Desktop year heatmap with month hover
+function DesktopYearHeatmap({ year, dataByYear, monthlyStats, getColorLevel, handleDayClick }) {
+  const [hoveredMonth, setHoveredMonth] = useState(null)
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  const getMonthFromDate = (dateStr) => {
+    if (!dateStr) return null
+    // Handle both 'YYYY-MM-DD' and 'YYYY/M/D' formats
+    const parts = dateStr.includes('/') ? dateStr.split('/') : dateStr.split('-')
+    const year = parts[0]
+    const month = parts[1]?.padStart(2, '0')
+    return `${year}-${month}`
+  }
+
+  const hoveredMonthStats = hoveredMonth ? monthlyStats[hoveredMonth] : null
+  const hasMonthStats = hoveredMonthStats && (hoveredMonthStats.downloaded > 0 || hoveredMonthStats.uploaded > 0)
+
+  return (
+    <div>
+      <div 
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '20px 0',
+          overflowX: 'auto',
+        }}
+      >
+        <div 
+          style={{ 
+            width: 'fit-content',
+          }}
+          onMouseLeave={() => setHoveredMonth(null)}
+        >
+          <HeatMap
+          value={dataByYear[year].map(item => {
+            const level = getColorLevel(item.count)
+            return {
+              date: item.date,
+              count: level,
+              content: item.count,
+            }
+          })}
+          width={900}
+          rectSize={14}
+          legendCellSize={0}
+          startDate={new Date(`${year}-01-01`)}
+          endDate={new Date(`${year}-12-31`)}
+          rectProps={{
+            rx: 3,
+          }}
+          panelColors={{
+            0: 'rgba(255, 255, 255, 0.05)',
+            1: 'rgba(0, 245, 255, 0.2)',
+            2: 'rgba(0, 245, 255, 0.4)',
+            3: 'rgba(178, 75, 243, 0.5)',
+            4: 'rgba(255, 16, 240, 0.7)',
+          }}
+          monthLabels={monthNames}
+          weekLabels={['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']}
+          style={{
+            color: '#fff',
+          }}
+          rectRender={(props, data) => {
+            const hasData = data.count > 0
+            const cellMonth = getMonthFromDate(data.date)
+            const isDimmed = hoveredMonth && cellMonth !== hoveredMonth
+
+            const colorMap = {
+              0: 'rgba(255, 255, 255, 0.05)',
+              1: 'rgba(0, 245, 255, 0.2)',
+              2: 'rgba(0, 245, 255, 0.4)',
+              3: 'rgba(178, 75, 243, 0.5)',
+              4: 'rgba(255, 16, 240, 0.7)',
+            }
+            const fillColor = colorMap[data.count] || colorMap[0]
+
+            return (
+              <g>
+                <rect
+                  {...props}
+                  fill={fillColor}
+                  opacity={isDimmed ? 0.35 : 1}
+                  onClick={() => {
+                    if (hasData) {
+                      handleDayClick(data.date)
+                    }
+                  }}
+                  style={{
+                    cursor: hasData ? 'pointer' : 'default',
+                    transition: 'opacity 0.25s ease, filter 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    setHoveredMonth(cellMonth)
+                    if (hasData) {
+                      e.target.style.filter = 'brightness(1.3)'
+                      e.target.style.strokeWidth = '2'
+                      e.target.style.stroke = '#00f5ff'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    // Don't reset hoveredMonth here - let the container handle it
+                    e.target.style.filter = 'brightness(1)'
+                    e.target.style.strokeWidth = '0'
+                  }}
+                />
+                {hasData && (
+                  <title>
+                    {data.date}
+                    {'\n'}
+                    Total Traffic: {formatBytes(data.content || 0)}
+                  </title>
+                )}
+              </g>
+            )
+          }}
+          />
+        </div>
+      </div>
+
+      {/* Legend with month stats */}
+      <div style={{
+        marginTop: '24px',
+        paddingTop: '20px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}>
+        {/* Month stats - left side */}
+        {hasMonthStats && (
+          <div style={{
+            position: 'absolute',
+            left: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '12px',
+            opacity: 1,
+            transition: 'opacity 0.25s ease',
+            pointerEvents: 'none',
+          }}>
+            <span style={{ 
+              fontWeight: '600',
+              color: '#00f5ff',
+            }}>
+              {monthNames[parseInt(hoveredMonth.split('-')[1]) - 1]}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#00f2fe' }}>
+              <ArrowDownCircle size={12} />
+              <span>{formatBytes(hoveredMonthStats.downloaded)}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#fee140' }}>
+              <ArrowUpCircle size={12} />
+              <span>{formatBytes(hoveredMonthStats.uploaded)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Less...More - center */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Less</span>
+          {[
+            'rgba(255, 255, 255, 0.05)',
+            'rgba(0, 245, 255, 0.25)',
+            'rgba(0, 245, 255, 0.45)',
+            'rgba(178, 75, 243, 0.55)',
+            'rgba(255, 16, 240, 0.75)',
+          ].map((color, i) => (
+            <div key={i} style={{
+              width: '14px',
+              height: '14px',
+              borderRadius: '3px',
+              background: color,
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }} />
+          ))}
+          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>More</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ActivityMatrix({ setActiveTab, setDateRange }) {
   const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
@@ -446,121 +630,45 @@ function ActivityMatrix({ setActiveTab, setDateRange }) {
           {isMobile ? (
             <MobileYearView year={year} />
           ) : (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              padding: '20px 0',
-              overflowX: 'auto',
-            }}>
-              <HeatMap
-                value={dataByYear[year].map(item => {
-                  const level = getColorLevel(item.count)
-                  return {
-                    date: item.date,
-                    count: level,
-                    content: item.count,
-                  }
-                })}
-                width={1100}
-                rectSize={14}
-                legendCellSize={0}
-                startDate={new Date(`${year}-01-01`)}
-                endDate={new Date(`${year}-12-31`)}
-                rectProps={{
-                  rx: 3,
-                }}
-                panelColors={{
-                  0: 'rgba(255, 255, 255, 0.05)',
-                  1: 'rgba(0, 245, 255, 0.2)',
-                  2: 'rgba(0, 245, 255, 0.4)',
-                  3: 'rgba(178, 75, 243, 0.5)',
-                  4: 'rgba(255, 16, 240, 0.7)',
-                }}
-                monthLabels={['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']}
-                weekLabels={['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']}
-                style={{
-                  color: '#fff',
-                }}
-                rectRender={(props, data) => {
-                  const hasData = data.count > 0
-
-                  const colorMap = {
-                    0: 'rgba(255, 255, 255, 0.05)',
-                    1: 'rgba(0, 245, 255, 0.2)',
-                    2: 'rgba(0, 245, 255, 0.4)',
-                    3: 'rgba(178, 75, 243, 0.5)',
-                    4: 'rgba(255, 16, 240, 0.7)',
-                  }
-                  const fillColor = colorMap[data.count] || colorMap[0]
-
-                  return (
-                    <g>
-                      <rect
-                        {...props}
-                        fill={fillColor}
-                        onClick={() => {
-                          if (hasData) {
-                            handleDayClick(data.date)
-                          }
-                        }}
-                        style={{
-                          cursor: hasData ? 'pointer' : 'default',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (hasData) {
-                            e.target.style.filter = 'brightness(1.3)'
-                            e.target.style.strokeWidth = '2'
-                            e.target.style.stroke = '#00f5ff'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.filter = 'brightness(1)'
-                          e.target.style.strokeWidth = '0'
-                        }}
-                      />
-                      {hasData && (
-                        <title>
-                          {data.date}
-                          {'\n'}
-                          Total Traffic: {formatBytes(data.content || 0)}
-                        </title>
-                      )}
-                    </g>
-                  )
-                }}
-              />
-            </div>
+            <DesktopYearHeatmap
+              year={year}
+              dataByYear={dataByYear}
+              monthlyStats={monthlyStats}
+              getColorLevel={getColorLevel}
+              handleDayClick={handleDayClick}
+            />
           )}
 
-          {/* Legend */}
-          <div style={{
-            marginTop: isMobile ? '16px' : '24px',
-            paddingTop: isMobile ? '12px' : '20px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: isMobile ? '6px' : '8px',
-          }}>
-            <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)' }}>Less</span>
-            {[
-              'rgba(255, 255, 255, 0.05)',
-              'rgba(0, 245, 255, 0.25)',
-              'rgba(0, 245, 255, 0.45)',
-              'rgba(178, 75, 243, 0.55)',
-              'rgba(255, 16, 240, 0.75)',
-            ].map((color, i) => (
-              <div key={i} style={{
-                width: isMobile ? '12px' : '14px',
-                height: isMobile ? '12px' : '14px',
-                borderRadius: '3px',
-                background: color,
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              }} />
-            ))}
-            <span style={{ fontSize: isMobile ? '11px' : '13px', color: 'var(--text-secondary)' }}>More</span>
-          </div>
+          {/* Legend - only for mobile, desktop has it inside DesktopYearHeatmap */}
+          {isMobile && (
+            <div style={{
+              marginTop: '16px',
+              paddingTop: '12px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Less</span>
+              {[
+                'rgba(255, 255, 255, 0.05)',
+                'rgba(0, 245, 255, 0.25)',
+                'rgba(0, 245, 255, 0.45)',
+                'rgba(178, 75, 243, 0.55)',
+                'rgba(255, 16, 240, 0.75)',
+              ].map((color, i) => (
+                <div key={i} style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '3px',
+                  background: color,
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }} />
+              ))}
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>More</span>
+            </div>
+          )}
         </motion.div>
       ))}
     </div>
