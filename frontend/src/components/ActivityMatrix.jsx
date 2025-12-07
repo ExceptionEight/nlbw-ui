@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, TrendingUp, ArrowDown, ArrowUp, ArrowDownCircle, ArrowUpCircle } from 'lucide-react'
+import { Calendar, TrendingUp, ArrowDown, ArrowUp, ArrowDownCircle, ArrowUpCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import HeatMap from '@uiw/react-heat-map'
 import dayjs from 'dayjs'
 import { formatBytes } from '../utils/format'
@@ -323,14 +323,22 @@ function DesktopYearHeatmap({ year, dataByYear, monthlyStats, getColorLevel, han
   )
 }
 
+const YEARS_PER_PAGE = 5
+
 function ActivityMatrix({ setActiveTab, setDateRange, selectedMacs = [] }) {
   const isMobile = useIsMobile()
   const [loading, setLoading] = useState(true)
   const [calendarData, setCalendarData] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     fetchCalendarData()
   }, [selectedMacs])
+
+  // Scroll to top on page change
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [currentPage])
 
   const fetchCalendarData = async () => {
     setLoading(true)
@@ -419,7 +427,13 @@ function ActivityMatrix({ setActiveTab, setDateRange, selectedMacs = [] }) {
     }
   })
 
-  const years = Object.keys(dataByYear).sort()
+  const years = Object.keys(dataByYear).sort((a, b) => b - a) // Descending order
+
+  // Pagination
+  const totalPages = Math.ceil(years.length / YEARS_PER_PAGE)
+  const startIndex = (currentPage - 1) * YEARS_PER_PAGE
+  const endIndex = startIndex + YEARS_PER_PAGE
+  const paginatedYears = years.slice(startIndex, endIndex)
   const avgTraffic = activeDays > 0 ? totalTraffic / activeDays : 0
 
   // Helper function to get color level based on traffic
@@ -578,7 +592,7 @@ function ActivityMatrix({ setActiveTab, setDateRange, selectedMacs = [] }) {
       </motion.div>
 
       {/* Heatmaps by Year */}
-      {years.map((year, yearIndex) => (
+      {paginatedYears.map((year, yearIndex) => (
         <motion.div
           key={year}
           initial={{ opacity: 0, y: 30 }}
@@ -672,6 +686,63 @@ function ActivityMatrix({ setActiveTab, setDateRange, selectedMacs = [] }) {
           )}
         </motion.div>
       ))}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: isMobile ? '12px' : '16px',
+          marginTop: isMobile ? '24px' : '32px',
+        }}>
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{
+              width: '40px',
+              height: '40px',
+              background: 'transparent',
+              border: 'none',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              color: currentPage === 1 ? 'rgba(255, 255, 255, 0.2)' : '#00f5ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          <span style={{
+            fontSize: isMobile ? '14px' : '15px',
+            color: 'var(--text-secondary)',
+            fontWeight: '500',
+            minWidth: '40px',
+            textAlign: 'center',
+          }}>
+            {currentPage}/{totalPages}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              width: '40px',
+              height: '40px',
+              background: 'transparent',
+              border: 'none',
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+              color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.2)' : '#00f5ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
