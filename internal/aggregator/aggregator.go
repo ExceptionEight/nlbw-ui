@@ -140,12 +140,21 @@ func (a *Aggregator) GetDeviceProtocols(date, mac string) []ProtocolStats {
 	return nil
 }
 
+// DaySummary - облегчённая структура для списка дней (без devices)
+type DaySummary struct {
+	Date       string `json:"date"`
+	Downloaded uint64 `json:"downloaded"`
+	Uploaded   uint64 `json:"uploaded"`
+}
+
 // GetSummary возвращает агрегированную статистику за период
+// devices агрегируются за весь период, days содержит только даты и трафик
 func (a *Aggregator) GetSummary(from, to string) map[string]interface{} {
 	allData := a.cache.GetAll()
 
 	var totalDownloaded, totalUploaded uint64
-	dayStats := make([]DayStats, 0)
+	daySummaries := make([]DaySummary, 0)
+	aggregatedDevices := make(map[string]*DeviceStats)
 
 	fromTime, _ := time.Parse("2006-01-02", from)
 	toTime, _ := time.Parse("2006-01-02", to)
@@ -162,12 +171,39 @@ func (a *Aggregator) GetSummary(from, to string) map[string]interface{} {
 			dayData := a.aggregateDayData(fileDate, data)
 			totalDownloaded += dayData.Downloaded
 			totalUploaded += dayData.Uploaded
-			dayStats = append(dayStats, *dayData)
+
+			// Добавляем облегчённую запись дня
+			daySummaries = append(daySummaries, DaySummary{
+				Date:       dayData.Date,
+				Downloaded: dayData.Downloaded,
+				Uploaded:   dayData.Uploaded,
+			})
+
+			// Агрегируем devices за весь период
+			for mac, device := range dayData.Devices {
+				if _, exists := aggregatedDevices[mac]; !exists {
+					aggregatedDevices[mac] = &DeviceStats{
+						MAC:          device.MAC,
+						FriendlyName: device.FriendlyName,
+						IP:           device.IP,
+					}
+				}
+				agg := aggregatedDevices[mac]
+				agg.Downloaded += device.Downloaded
+				agg.Uploaded += device.Uploaded
+				agg.RxPackets += device.RxPackets
+				agg.TxPackets += device.TxPackets
+				agg.Connections += device.Connections
+				// Обновляем IP на самый свежий
+				if device.IP != "" {
+					agg.IP = device.IP
+				}
+			}
 		}
 	}
 
-	sort.Slice(dayStats, func(i, j int) bool {
-		return dayStats[i].Date < dayStats[j].Date
+	sort.Slice(daySummaries, func(i, j int) bool {
+		return daySummaries[i].Date < daySummaries[j].Date
 	})
 
 	return map[string]interface{}{
@@ -175,7 +211,8 @@ func (a *Aggregator) GetSummary(from, to string) map[string]interface{} {
 		"to":               to,
 		"total_downloaded": totalDownloaded,
 		"total_uploaded":   totalUploaded,
-		"days":             dayStats,
+		"devices":          aggregatedDevices,
+		"days":             daySummaries,
 	}
 }
 
@@ -327,6 +364,68 @@ func (a *Aggregator) aggregateDeviceProtocols(mac string, data *converter.Traffi
 		ps.RxPackets += row[7].(uint64)
 		ps.TxPackets += row[9].(uint64)
 		ps.Connections += row[5].(uint64)
+	}
+
+	result := make([]ProtocolStats, 0, len(protoMap))
+	for _, ps := range protoMap {
+		result = append(result, *ps)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Downloaded > result[j].Downloaded
+	})
+
+	return result
+}
+
+// GetDeviceProtocolsRange возвращает агрегированные протоколы устройства за диапазон дат
+func (a *Aggregator) GetDeviceProtocolsRange(from, to, mac string) []ProtocolStats {
+	allData := a.cache.GetAll()
+	protoMap := make(map[string]*ProtocolStats)
+
+	fromTime, _ := time.Parse("2006-01-02", from)
+	toTime, _ := time.Parse("2006-01-02", to)
+	normalizedMAC := strings.ToLower(mac)
+
+	for path, data := range allData {
+		fileDate := a.ExtractDateFromFilename(path)
+		fileTime, err := time.Parse("2006-01-02", fileDate)
+		if err != nil {
+			continue
+		}
+
+		if (fileTime.Equal(fromTime) || fileTime.After(fromTime)) &&
+		   (fileTime.Equal(toTime) || fileTime.Before(toTime)) {
+			// Агрегируем протоколы за этот день
+			for _, row := range data.Data {
+				if len(row) < 11 {
+					continue
+				}
+
+				rowMac := strings.ToLower(row[3].(string))
+				if rowMac != normalizedMAC {
+					continue
+				}
+
+				proto := row[1].(string)
+				port := row[2].(uint16)
+				key := fmt.Sprintf("%s:%d", proto, port)
+
+				if _, exists := protoMap[key]; !exists {
+					protoMap[key] = &ProtocolStats{
+						Protocol: proto,
+						Port:     port,
+					}
+				}
+
+				ps := protoMap[key]
+				ps.Downloaded += row[6].(uint64)
+				ps.Uploaded += row[8].(uint64)
+				ps.RxPackets += row[7].(uint64)
+				ps.TxPackets += row[9].(uint64)
+				ps.Connections += row[5].(uint64)
+			}
+		}
 	}
 
 	result := make([]ProtocolStats, 0, len(protoMap))

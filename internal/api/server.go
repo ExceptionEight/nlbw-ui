@@ -42,6 +42,7 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux.HandleFunc("/api/day/", s.handleGetDay)
 	mux.HandleFunc("/api/device/", s.handleGetDevice)
 	mux.HandleFunc("/api/timeseries", s.handleGetTimeseries)
+	mux.HandleFunc("/api/device-protocols", s.handleGetDeviceProtocolsRange)
 
 	// Achievements endpoint
 	mux.HandleFunc("/api/achievements", s.handleGetAchievements)
@@ -176,6 +177,30 @@ func (s *Server) handleGetTimeseries(w http.ResponseWriter, r *http.Request) {
 	timeseries := s.aggregator.GetTimeseries(from, to, macs)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(timeseries)
+}
+
+// GET /api/device-protocols?from=...&to=...&mac=...
+// Агрегированные протоколы устройства за диапазон дат
+func (s *Server) handleGetDeviceProtocolsRange(w http.ResponseWriter, r *http.Request) {
+	from := r.URL.Query().Get("from")
+	to := r.URL.Query().Get("to")
+	mac := r.URL.Query().Get("mac")
+
+	if mac == "" {
+		http.Error(w, "mac is required", http.StatusBadRequest)
+		return
+	}
+
+	// Defaults: last 30 days
+	if from == "" || to == "" {
+		now := time.Now()
+		to = now.Format("2006-01-02")
+		from = now.AddDate(0, 0, -30).Format("2006-01-02")
+	}
+
+	protocols := s.aggregator.GetDeviceProtocolsRange(from, to, mac)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(protocols)
 }
 
 // GET /api/achievements - достижения для всей сети

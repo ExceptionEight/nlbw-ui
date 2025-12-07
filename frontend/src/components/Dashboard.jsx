@@ -16,20 +16,9 @@ function Dashboard({ dateRange }) {
   const [protocols, setProtocols] = useState([])
   const [modalVisible, setModalVisible] = useState(false)
   const [protocolsLoading, setProtocolsLoading] = useState(false)
-  const [availableDates, setAvailableDates] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [hoveredProtocol, setHoveredProtocol] = useState(null)
   const [selectedProtocol, setSelectedProtocol] = useState(null)
-
-  useEffect(() => {
-    fetch('/api/calendar')
-      .then(res => res.json())
-      .then(data => {
-        const dates = data.filter(d => d.value > 0).map(d => d.date)
-        setAvailableDates(dates)
-      })
-      .catch(err => console.error('Failed to fetch available dates:', err))
-  }, [])
 
   useEffect(() => {
     fetchSummary()
@@ -71,39 +60,15 @@ function Dashboard({ dateRange }) {
   const fetchProtocols = async (mac) => {
     setProtocolsLoading(true)
     try {
-      const startDate = dateRange[0].format('YYYY-MM-DD')
-      const endDate = dateRange[1].format('YYYY-MM-DD')
-      const datesToFetch = availableDates.filter(date => date >= startDate && date <= endDate)
-
-      const protocolMap = {}
-
-      for (const dateStr of datesToFetch) {
-        try {
-          const response = await fetch(`/api/device/${dateStr}/${mac}`)
-          if (response.ok) {
-            const data = await response.json()
-            if (Array.isArray(data)) {
-              data.forEach(proto => {
-                const key = `${proto.protocol}:${proto.port}`
-                if (!protocolMap[key]) {
-                  protocolMap[key] = { ...proto }
-                } else {
-                  protocolMap[key].downloaded += proto.downloaded
-                  protocolMap[key].uploaded += proto.uploaded
-                  protocolMap[key].rx_packets += proto.rx_packets
-                  protocolMap[key].tx_packets += proto.tx_packets
-                  protocolMap[key].connections += proto.connections
-                }
-              })
-            }
-          }
-        } catch (err) {
-          // Continue
-        }
+      const from = dateRange[0].format('YYYY-MM-DD')
+      const to = dateRange[1].format('YYYY-MM-DD')
+      const response = await fetch(`/api/device-protocols?from=${from}&to=${to}&mac=${encodeURIComponent(mac)}`)
+      if (response.ok) {
+        const data = await response.json()
+        setProtocols(Array.isArray(data) ? data : [])
+      } else {
+        setProtocols([])
       }
-
-      const aggregatedData = Object.values(protocolMap).sort((a, b) => b.downloaded - a.downloaded)
-      setProtocols(aggregatedData)
     } catch (error) {
       console.error('Failed to fetch protocols:', error)
       setProtocols([])
@@ -135,33 +100,8 @@ function Dashboard({ dateRange }) {
     )
   }
 
-  const deviceStats = {}
-  summary.days.forEach((day) => {
-    if (day.devices) {
-      Object.values(day.devices).forEach((device) => {
-        const key = device.mac
-        if (!deviceStats[key]) {
-          deviceStats[key] = {
-            mac: device.mac,
-            friendly_name: device.friendly_name,
-            ip: device.ip,
-            downloaded: 0,
-            uploaded: 0,
-            rx_packets: 0,
-            tx_packets: 0,
-            connections: 0,
-          }
-        }
-        deviceStats[key].downloaded += device.downloaded
-        deviceStats[key].uploaded += device.uploaded
-        deviceStats[key].rx_packets += device.rx_packets
-        deviceStats[key].tx_packets += device.tx_packets
-        deviceStats[key].connections += device.connections
-      })
-    }
-  })
-
-  const allDevices = Object.values(deviceStats)
+  // Используем готовые агрегированные данные с сервера
+  const allDevices = Object.values(summary.devices || {})
     .sort((a, b) => b.downloaded - a.downloaded)
 
   const topDevices = allDevices.slice(0, 10)
@@ -195,7 +135,7 @@ function Dashboard({ dateRange }) {
     },
     {
       title: 'Total Devices',
-      value: Object.keys(deviceStats).length,
+      value: allDevices.length,
       icon: Laptop,
       gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: '#667eea',
