@@ -172,6 +172,7 @@ function App() {
                 dateRange={dateRange}
                 onChange={setDateRange}
                 availableDates={availableDates}
+                minMaxDates={minMaxDates}
               />
             </motion.div>
           )}

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar, X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import DatePicker from 'react-datepicker'
 import dayjs from 'dayjs'
 import 'react-datepicker/dist/react-datepicker.css'
 import { useIsMobile } from '../App'
 
-function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal = false }) {
+function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal = false, minMaxDates = null }) {
   const isMobile = useIsMobile()
   const [isOpen, setIsOpen] = useState(false)
   const [startDate, setStartDate] = useState(dateRange[0].toDate())
@@ -44,6 +44,18 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
 
   // Create set of available dates for fast lookup
   const availableDateSet = new Set(availableDates)
+
+  // Check if current range is already max
+  const isMaxRange = minMaxDates && 
+    dateRange[0].format('YYYY-MM-DD') === minMaxDates.min.format('YYYY-MM-DD') &&
+    dateRange[1].format('YYYY-MM-DD') === minMaxDates.max.format('YYYY-MM-DD')
+
+  const handleReset = () => {
+    if (minMaxDates) {
+      setStartDate(minMaxDates.min.toDate())
+      setEndDate(minMaxDates.max.toDate())
+    }
+  }
 
   // Custom day class name function
   const getDayClassName = (date) => {
@@ -289,25 +301,49 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
           </h3>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.1, rotate: 90 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsOpen(false)}
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '8px',
-            width: '32px',
-            height: '32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#fff',
-          }}
-        >
-          <X size={16} />
-        </motion.button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {minMaxDates && !isMaxRange && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleReset}
+              title="Reset to full range"
+              style={{
+                background: 'rgba(0, 245, 255, 0.1)',
+                border: '1px solid rgba(0, 245, 255, 0.3)',
+                borderRadius: '8px',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#00f5ff',
+              }}
+            >
+              <Trash2 size={14} />
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsOpen(false)}
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#fff',
+            }}
+          >
+            <X size={16} />
+          </motion.button>
+        </div>
       </div>
 
       {/* Date Picker */}
@@ -421,24 +457,46 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
               </h3>
             </div>
 
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={handleCancel}
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: '#fff',
-              }}
-            >
-              <X size={20} />
-            </motion.button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {minMaxDates && !isMaxRange && (
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleReset}
+                  style={{
+                    background: 'rgba(0, 245, 255, 0.1)',
+                    border: '1px solid rgba(0, 245, 255, 0.3)',
+                    borderRadius: '10px',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#00f5ff',
+                  }}
+                >
+                  <Trash2 size={18} />
+                </motion.button>
+              )}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={handleCancel}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                }}
+              >
+                <X size={20} />
+              </motion.button>
+            </div>
           </div>
           
           {/* Selected range display */}
