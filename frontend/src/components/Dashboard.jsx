@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, Upload, Laptop, Activity, TrendingUp, X, Wifi, ChevronLeft, ChevronRight } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts'
@@ -19,6 +19,65 @@ function Dashboard({ dateRange }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [hoveredProtocol, setHoveredProtocol] = useState(null)
   const [selectedProtocol, setSelectedProtocol] = useState(null)
+  const allDevicesRef = useRef(null)
+  const isFirstRender = useRef(true)
+  const isInitialPageLoad = useRef(true)
+  const scrollAnimationRef = useRef(null)
+
+  // Custom smooth scroll with interruption support
+  const scrollToAllDevices = () => {
+    if (!allDevicesRef.current) return
+
+    const targetPosition = allDevicesRef.current.getBoundingClientRect().top + window.pageYOffset
+    const startPosition = window.pageYOffset
+    const distance = targetPosition - startPosition
+    const duration = 500 // ms
+    let startTime = null
+
+    const stopAnimation = () => {
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current)
+        scrollAnimationRef.current = null
+      }
+      window.removeEventListener('wheel', stopAnimation)
+      window.removeEventListener('touchstart', stopAnimation)
+    }
+
+    const animation = (currentTime) => {
+      if (!startTime) startTime = currentTime
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+
+      // easeOutCubic
+      const easeProgress = 1 - Math.pow(1 - progress, 3)
+
+      window.scrollTo(0, startPosition + distance * easeProgress)
+
+      if (progress < 1) {
+        scrollAnimationRef.current = requestAnimationFrame(animation)
+      } else {
+        stopAnimation()
+      }
+    }
+
+    // Stop previous animation if any
+    stopAnimation()
+
+    // Add listeners for user interruption
+    window.addEventListener('wheel', stopAnimation, { once: true })
+    window.addEventListener('touchstart', stopAnimation, { once: true })
+
+    scrollAnimationRef.current = requestAnimationFrame(animation)
+  }
+
+  // Scroll to All Devices on page change (except first render)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    scrollToAllDevices()
+  }, [currentPage])
 
   useEffect(() => {
     fetchSummary()
@@ -321,6 +380,7 @@ function Dashboard({ dateRange }) {
 
       {/* All Devices Table */}
       <motion.div
+        ref={allDevicesRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
@@ -354,7 +414,7 @@ function Dashboard({ dateRange }) {
                   key={device.mac}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.05 }}
+                  transition={{ delay: isInitialPageLoad.current ? (0.6 + index * 0.05) : (index * 0.03) }}
                   onClick={() => handleRowClick(device)}
                   style={{ cursor: 'pointer' }}
                 >
@@ -401,66 +461,62 @@ function Dashboard({ dateRange }) {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: isMobile ? '8px' : '12px',
+            gap: isMobile ? '12px' : '16px',
             marginTop: isMobile ? '16px' : '24px',
             paddingTop: isMobile ? '16px' : '20px',
             borderTop: '1px solid rgba(255, 255, 255, 0.05)',
           }}>
-            <motion.button
-              whileHover={currentPage > 1 ? { scale: 1.05 } : {}}
-              whileTap={currentPage > 1 ? { scale: 0.95 } : {}}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            <button
+              onClick={() => {
+                isInitialPageLoad.current = false
+                setCurrentPage(p => Math.max(1, p - 1))
+              }}
               disabled={currentPage === 1}
               style={{
-                background: currentPage === 1 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 245, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                padding: isMobile ? '8px 12px' : '10px 16px',
+                width: '40px',
+                height: '40px',
+                background: 'transparent',
+                border: 'none',
                 cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                color: currentPage === 1 ? 'var(--text-muted)' : '#00f5ff',
+                color: currentPage === 1 ? 'rgba(255, 255, 255, 0.2)' : '#00f5ff',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: isMobile ? '13px' : '14px',
-                fontWeight: '500',
-                opacity: currentPage === 1 ? 0.5 : 1,
+                justifyContent: 'center',
               }}
             >
-              <ChevronLeft size={isMobile ? 16 : 18} />
-              {!isMobile && 'Previous'}
-            </motion.button>
+              <ChevronLeft size={24} />
+            </button>
 
-            <div style={{
+            <span style={{
+              fontSize: isMobile ? '14px' : '15px',
               color: 'var(--text-secondary)',
-              fontSize: isMobile ? '13px' : '14px',
               fontWeight: '500',
+              minWidth: '40px',
+              textAlign: 'center',
             }}>
-              Page {currentPage} of {totalPages}
-            </div>
+              {currentPage}/{totalPages}
+            </span>
 
-            <motion.button
-              whileHover={currentPage < totalPages ? { scale: 1.05 } : {}}
-              whileTap={currentPage < totalPages ? { scale: 0.95 } : {}}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            <button
+              onClick={() => {
+                isInitialPageLoad.current = false
+                setCurrentPage(p => Math.min(totalPages, p + 1))
+              }}
               disabled={currentPage === totalPages}
               style={{
-                background: currentPage === totalPages ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 245, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px',
-                padding: isMobile ? '8px 12px' : '10px 16px',
+                width: '40px',
+                height: '40px',
+                background: 'transparent',
+                border: 'none',
                 cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                color: currentPage === totalPages ? 'var(--text-muted)' : '#00f5ff',
+                color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.2)' : '#00f5ff',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: isMobile ? '13px' : '14px',
-                fontWeight: '500',
-                opacity: currentPage === totalPages ? 0.5 : 1,
+                justifyContent: 'center',
               }}
             >
-              {!isMobile && 'Next'}
-              <ChevronRight size={isMobile ? 16 : 18} />
-            </motion.button>
+              <ChevronRight size={24} />
+            </button>
           </div>
         )}
       </motion.div>
@@ -678,10 +734,7 @@ function Dashboard({ dateRange }) {
                                 outerRadius={isMobile ? 80 : 100}
                                 fill="#8884d8"
                                 dataKey="value"
-                                // Переносим onClick сюда, т.к. onClick на Cell работает нестабильно в Recharts
                                 onClick={(data, index, e) => {
-                                  // Останавливаем всплытие к карточке
-                                  // В Recharts аргумент 'e' обычно идет третьим
                                   const event = e || index; 
                                   if (event && event.stopPropagation) {
                                     event.stopPropagation();
@@ -714,7 +767,6 @@ function Dashboard({ dateRange }) {
                                       }}
                                       onMouseEnter={() => setHoveredProtocol(protocolName)}
                                       onMouseLeave={() => setHoveredProtocol(null)}
-                                      // Удален onClick отсюда, вся логика перенесена в Pie
                                     />
                                   )
                                 })}
@@ -749,7 +801,6 @@ function Dashboard({ dateRange }) {
                                 onMouseEnter={() => setHoveredProtocol(protocolName)}
                                 onMouseLeave={() => setHoveredProtocol(null)}
                                 onClick={(e) => {
-                                  // Останавливаем всплытие, чтобы не сбросилось
                                   e.stopPropagation()
                                   if (selectedProtocol === protocolName) {
                                     setSelectedProtocol(null)
