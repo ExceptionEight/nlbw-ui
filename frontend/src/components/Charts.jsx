@@ -35,24 +35,14 @@ function Charts({ dateRange }) {
       const response = await fetch(`/api/summary?from=${from}&to=${to}`)
       const data = await response.json()
 
-      const deviceStats = {}
-      data.days.forEach((day) => {
-        if (day.devices) {
-          Object.values(day.devices).forEach((device) => {
-            const key = device.mac
-            if (!deviceStats[key]) {
-              deviceStats[key] = {
-                mac: device.mac,
-                friendly_name: device.friendly_name,
-                total: 0,
-              }
-            }
-            deviceStats[key].total += device.downloaded + device.uploaded
-          })
-        }
-      })
-
-      const devicesArray = Object.values(deviceStats).sort((a, b) => b.total - a.total)
+      // Используем готовые агрегированные данные с сервера
+      const devicesArray = Object.values(data.devices || {})
+        .map(device => ({
+          mac: device.mac,
+          friendly_name: device.friendly_name,
+          total: device.downloaded + device.uploaded,
+        }))
+        .sort((a, b) => b.total - a.total)
       setDevices(devicesArray)
     } catch (error) {
       console.error('Failed to fetch devices:', error)
