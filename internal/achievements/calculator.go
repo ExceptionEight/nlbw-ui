@@ -107,6 +107,8 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 		status = c.checkThreeBodyAchievement(achievement)
 	case AchievementOnFire:
 		status = c.checkOnFireAchievement(achievement)
+	case AchievementPuddingLane:
+		status = c.checkHTTPTrafficAchievement(achievement)
 	}
 
 	// Если ачивка разблокирована - сохраняем в кэш
@@ -405,6 +407,70 @@ func (c *Calculator) checkFTPTrafficAchievement(achievement Achievement) Achieve
 
 				// FTP порт 21
 				if port == 21 {
+					rxBytes, _ := row[6].(uint64)
+					txBytes, _ := row[8].(uint64)
+					totalTraffic += rxBytes + txBytes
+				}
+			}
+
+			if float64(totalTraffic) >= achievement.Threshold {
+				parsedDate, err := time.Parse("2006-01-02", day.Date)
+				if err == nil {
+					status.Unlocked = true
+					status.UnlockedAt = &parsedDate
+					status.CurrentValue = float64(totalTraffic)
+					status.Progress = 1.0
+					return status
+				}
+			}
+		}
+	}
+
+	status.CurrentValue = float64(totalTraffic)
+	status.Progress = status.CurrentValue / status.TargetValue
+	if status.Progress > 1.0 {
+		status.Progress = 1.0
+	}
+
+	return status
+}
+
+// checkHTTPTrafficAchievement проверяет достижения на трафик по HTTP (порт 80)
+func (c *Calculator) checkHTTPTrafficAchievement(achievement Achievement) AchievementStatus {
+	status := AchievementStatus{
+		Achievement: achievement,
+		TargetValue: achievement.Threshold,
+	}
+
+	totalTraffic := uint64(0)
+
+	calendarData := c.aggregator.GetCalendarData(nil)
+	allData := c.cache.GetAll()
+
+	for _, day := range calendarData {
+		for path, data := range allData {
+			fileDate := c.aggregator.ExtractDateFromFilename(path)
+			if fileDate != day.Date {
+				continue
+			}
+
+			for _, row := range data.Data {
+				if len(row) < 9 {
+					continue
+				}
+
+				proto, ok := row[1].(string)
+				if !ok {
+					continue
+				}
+
+				port, ok := row[2].(uint16)
+				if !ok {
+					continue
+				}
+
+				// HTTP порт 80 по TCP
+				if port == 80 && strings.ToLower(proto) == "tcp" {
 					rxBytes, _ := row[6].(uint64)
 					txBytes, _ := row[8].(uint64)
 					totalTraffic += rxBytes + txBytes

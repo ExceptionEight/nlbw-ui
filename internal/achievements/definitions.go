@@ -44,8 +44,9 @@ const (
 	AchievementMissMe = "miss_me"
 
 	// Easter eggs
-	AchievementThreeBody = "three_body"
-	AchievementOnFire    = "on_fire"
+	AchievementThreeBody   = "three_body"
+	AchievementOnFire      = "on_fire"
+	AchievementPuddingLane = "pudding_lane"
 )
 
 // Пороговые значения в байтах
@@ -71,6 +72,7 @@ const (
 	HundredMegabytes       = 100 * 1024 * 1024
 	OneHundredFortyThreeGB = 143 * OneGigabyte
 	FourFiftyOneGB         = 451 * OneGigabyte
+	SixteenSixtySixMB      = 1666 * 1024 * 1024
 	TwentyDevices          = 20
 	NinetyDays             = 90
 )
@@ -254,6 +256,13 @@ func AllAchievements() []Achievement {
 			Description: "Upload 451 GB of data total",
 			Category:    CategoryData,
 			Threshold:   FourFiftyOneGB,
+		},
+		{
+			ID:          AchievementPuddingLane,
+			Name:        "Pudding Lane",
+			Description: "Transfer 1666 MB over unencrypted HTTP.",
+			Category:    CategoryProtocol,
+			Threshold:   SixteenSixtySixMB,
 		},
 	}
 }

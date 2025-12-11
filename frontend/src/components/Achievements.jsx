@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Trophy, Award, Lock, Database, Calendar, Network, TrendingUp, CheckCircle2, Circle } from 'lucide-react'
-import { formatBytes } from '../utils/format'
+import { formatBytes, formatMegabytes } from '../utils/format'
 import { useIsMobile } from '../App'
 
 // Category icons mapping
@@ -103,6 +103,10 @@ function Achievements() {
     // SSH and FTP achievements show bytes
     if (achievementId === 'red_eyed' || achievementId === 'what_year') {
       return formatBytes(value)
+    }
+    // HTTP achievement shows megabytes
+    if (achievementId === 'pudding_lane') {
+      return formatMegabytes(value)
     }
     // Ghost achievement - binary status
     if (achievementId === 'ghost') {
