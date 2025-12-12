@@ -16,12 +16,41 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
   // For mobile custom calendar
   const [currentMonth, setCurrentMonth] = useState(dayjs())
   const [selectingStart, setSelectingStart] = useState(true)
+  
+  // For desktop calendar - prevent auto-scrolling months
+  const [desktopMonth, setDesktopMonth] = useState(dayjs(dateRange[0]).startOf('month').toDate())
 
   // Sync with dateRange prop
   useEffect(() => {
     setStartDate(dateRange[0].toDate())
     setEndDate(dateRange[1].toDate())
   }, [dateRange])
+
+  // Format date range for preview with Today/Yesterday support
+  const formatDateRangePreview = () => {
+    const today = dayjs().startOf('day')
+    const yesterday = today.subtract(1, 'day')
+    const start = dateRange[0].startOf('day')
+    const end = dateRange[1].startOf('day')
+    
+    const isStartToday = start.isSame(today, 'day')
+    const isStartYesterday = start.isSame(yesterday, 'day')
+    const isEndToday = end.isSame(today, 'day')
+    const isEndYesterday = end.isSame(yesterday, 'day')
+    const isSameDay = start.isSame(end, 'day')
+    
+    // Single day cases
+    if (isSameDay) {
+      if (isStartToday) return 'Today'
+      if (isStartYesterday) return 'Yesterday'
+    }
+    
+    // Range cases
+    const formatStart = isStartToday ? 'Today' : isStartYesterday ? 'Yesterday' : dateRange[0].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')
+    const formatEnd = isEndToday ? 'Today' : isEndYesterday ? 'Yesterday' : dateRange[1].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')
+    
+    return `${formatStart} - ${formatEnd}`
+  }
 
   const handleDateChange = (dates) => {
     const [start, end] = dates
@@ -358,6 +387,8 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
           monthsShown={2}
           calendarClassName="custom-datepicker"
           dayClassName={getDayClassName}
+          openToDate={desktopMonth}
+          onMonthChange={(date) => setDesktopMonth(date)}
           filterDate={(date) => {
             const dateStr = dayjs(date).format('YYYY-MM-DD')
             return availableDateSet.has(dateStr)
@@ -718,6 +749,9 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
     if (isMobile) {
       setCurrentMonth(dayjs(startDate || new Date()))
       setSelectingStart(true)
+    } else {
+      // Reset desktop month view to start date when opening
+      setDesktopMonth(dayjs(startDate || new Date()).startOf('month').toDate())
     }
     setIsOpen(true)
   }
@@ -749,7 +783,7 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
         >
           <Calendar size={isMobile ? 16 : 18} color="#00f5ff" />
           <span>
-            {dateRange[0].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')} - {dateRange[1].format(isMobile ? 'MMM DD' : 'MMM DD, YYYY')}
+            {formatDateRangePreview()}
           </span>
         </div>
 
