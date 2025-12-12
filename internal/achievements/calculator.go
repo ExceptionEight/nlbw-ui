@@ -83,7 +83,7 @@ func (c *Calculator) checkAchievement(achievement Achievement) AchievementStatus
 		status = c.checkTotalTrafficAchievement(achievement)
 	case AchievementDailyBurner:
 		status = c.checkDailyBurnerAchievement(achievement)
-	case AchievementWeekWarrior, AchievementMonthlyActive:
+	case AchievementWeekWarrior, AchievementMonthlyActive, AchievementStillAlive:
 		status = c.checkConsecutiveDaysAchievement(achievement)
 	case AchievementNetworkGrowth:
 		status = c.checkNetworkGrowthAchievement(achievement)

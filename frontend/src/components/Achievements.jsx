@@ -435,7 +435,7 @@ function Achievements() {
                           color: 'var(--text-secondary)',
                           marginBottom: '2px',
                         }}>
-                          Unlocked
+                          {achievement.id === 'still_alive' ? 'HUGE SUCCESS' : 'Unlocked'}
                         </div>
                         <div style={{
                           fontSize: isMobile ? '12px' : '13px',

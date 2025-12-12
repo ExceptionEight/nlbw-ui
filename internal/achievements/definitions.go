@@ -13,6 +13,7 @@ const (
 	// Activity achievements
 	AchievementWeekWarrior   = "week_warrior"
 	AchievementMonthlyActive = "monthly_active"
+	AchievementStillAlive    = "still_alive"
 
 	// Network achievements
 	AchievementNetworkGrowth = "network_growth"
@@ -77,6 +78,7 @@ const (
 	FourFortyThreeGB       = 443 * OneGigabyte
 	TwentyDevices          = 20
 	NinetyDays             = 90
+	OneYear                = 365
 )
 
 // AllAchievements возвращает список всех доступных достижений
@@ -147,6 +149,13 @@ func AllAchievements() []Achievement {
 			Description: "Be active for 30 consecutive days",
 			Category:    CategoryActivity,
 			Threshold:   30,
+		},
+		{
+			ID:          AchievementStillAlive,
+			Name:        "Still Alive",
+			Description: "Be active for 365 consecutive days",
+			Category:    CategoryActivity,
+			Threshold:   365,
 		},
 
 		// Категория: Сеть
