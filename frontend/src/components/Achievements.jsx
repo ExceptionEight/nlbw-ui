@@ -100,8 +100,8 @@ function Achievements() {
     if (category === 'data') {
       return formatBytes(value)
     }
-    // SSH and FTP achievements show bytes
-    if (achievementId === 'red_eyed' || achievementId === 'what_year') {
+    // SSH, FTP, and Imposter achievements show bytes
+    if (achievementId === 'red_eyed' || achievementId === 'what_year' || achievementId === 'imposter') {
       return formatBytes(value)
     }
     // HTTP achievement shows megabytes

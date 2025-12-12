@@ -47,6 +47,7 @@ const (
 	AchievementThreeBody   = "three_body"
 	AchievementOnFire      = "on_fire"
 	AchievementPuddingLane = "pudding_lane"
+	AchievementImposter    = "imposter"
 )
 
 // Пороговые значения в байтах
@@ -73,6 +74,7 @@ const (
 	OneHundredFortyThreeGB = 143 * OneGigabyte
 	FourFiftyOneGB         = 451 * OneGigabyte
 	SixteenSixtySixMB      = 1666 * 1024 * 1024
+	FourFortyThreeGB       = 443 * OneGigabyte
 	TwentyDevices          = 20
 	NinetyDays             = 90
 )
@@ -263,6 +265,13 @@ func AllAchievements() []Achievement {
 			Description: "Transfer 1666 MB over unencrypted HTTP.",
 			Category:    CategoryProtocol,
 			Threshold:   SixteenSixtySixMB,
+		},
+		{
+			ID:          AchievementImposter,
+			Name:        "Imposter",
+			Description: "Transfer data via UDP:443. QUIC? Hysteria? Who knows",
+			Category:    CategoryProtocol,
+			Threshold:   FourFortyThreeGB,
 		},
 	}
 }
