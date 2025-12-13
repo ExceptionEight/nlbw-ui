@@ -5,14 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
 	DataDir       string            `yaml:"data_dir"`
-	ScanInterval  time.Duration     `yaml:"scan_interval"`
 	ServerAddress string            `yaml:"server_address"`
 	ServerPort    int               `yaml:"server_port"`
 	FriendlyNames map[string]string `yaml:"friendly_names"`
@@ -21,9 +19,6 @@ type Config struct {
 const defaultConfig = `# NLBW Monitor Configuration
 # Directory containing *.db.gz files
 data_dir: ./data
-
-# Scan interval for detecting new or modified files (e.g., 5s, 1m, 5m)
-scan_interval: 10s
 
 # Web server settings
 server_address: 0.0.0.0
@@ -83,10 +78,6 @@ func createDefaultConfig(path string) error {
 func (c *Config) validate() error {
 	if c.DataDir == "" {
 		return fmt.Errorf("data_dir cannot be empty")
-	}
-
-	if c.ScanInterval <= 0 {
-		return fmt.Errorf("scan_interval must be positive")
 	}
 
 	if c.ServerPort <= 0 || c.ServerPort > 65535 {

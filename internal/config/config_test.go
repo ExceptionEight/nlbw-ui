@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 func TestGetFriendlyName_CaseInsensitive(t *testing.T) {
@@ -90,7 +89,6 @@ func TestLoad_NormalizesMACAddresses(t *testing.T) {
 	configPath := filepath.Join(tempDir, "config.yaml")
 
 	configContent := `data_dir: ./data
-scan_interval: 10s
 server_address: 0.0.0.0
 server_port: 8080
 friendly_names:
@@ -131,36 +129,24 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "valid config",
 			config: Config{
-				DataDir:      "./data",
-				ScanInterval: 10 * time.Second,
-				ServerPort:   8080,
+				DataDir:    "./data",
+				ServerPort: 8080,
 			},
 			expectErr: false,
 		},
 		{
 			name: "empty data_dir",
 			config: Config{
-				DataDir:      "",
-				ScanInterval: 10 * time.Second,
-				ServerPort:   8080,
-			},
-			expectErr: true,
-		},
-		{
-			name: "negative scan interval",
-			config: Config{
-				DataDir:      "./data",
-				ScanInterval: -5 * time.Second,
-				ServerPort:   8080,
+				DataDir:    "",
+				ServerPort: 8080,
 			},
 			expectErr: true,
 		},
 		{
 			name: "invalid port",
 			config: Config{
-				DataDir:      "./data",
-				ScanInterval: 10 * time.Second,
-				ServerPort:   99999,
+				DataDir:    "./data",
+				ServerPort: 99999,
 			},
 			expectErr: true,
 		},

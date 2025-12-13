@@ -102,9 +102,6 @@ create_config() {
 # Directory containing nlbwmon *.db.gz files
 data_dir: ${data_dir}
 
-# Scan interval for detecting new or modified files
-scan_interval: 60m
-
 # Web server settings
 server_address: 0.0.0.0
 server_port: 8080

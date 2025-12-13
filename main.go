@@ -63,14 +63,14 @@ func main() {
 	} else {
 		// Обычный режим - сканирование файлов
 		fileScanner := scanner.New(cfg.DataDir)
-		fileScanner.OnNewFile(func(path, hash string) {
-			fmt.Printf("New file detected: %s (hash: %s)\n", path, hash[:8])
+		fileScanner.OnNewFile(func(path string) {
+			fmt.Printf("New file detected: %s\n", path)
 			if err := dataCache.LoadFile(path); err != nil {
 				fmt.Printf("Error loading file %s: %v\n", path, err)
 			}
 		})
-		fileScanner.OnModified(func(path, hash string) {
-			fmt.Printf("File modified: %s (new hash: %s)\n", path, hash[:8])
+		fileScanner.OnModified(func(path string) {
+			fmt.Printf("File modified: %s\n", path)
 			if err := dataCache.LoadFile(path); err != nil {
 				fmt.Printf("Error reloading file %s: %v\n", path, err)
 			}
@@ -82,7 +82,7 @@ func main() {
 		}
 
 		go func() {
-			ticker := time.NewTicker(cfg.ScanInterval)
+			ticker := time.NewTicker(10 * time.Second)
 			defer ticker.Stop()
 
 			for range ticker.C {
@@ -102,7 +102,7 @@ func main() {
 	if *demoFlag != "" {
 		fmt.Printf("- Mode: DEMO (data range: %s)\n\n", *demoFlag)
 	} else {
-		fmt.Printf("- Scanning: %s every %v\n\n", cfg.DataDir, cfg.ScanInterval)
+		fmt.Printf("- Scanning: %s\n\n", cfg.DataDir)
 	}
 
 	if err := server.Start(addr); err != nil {
