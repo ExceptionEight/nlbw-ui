@@ -54,6 +54,14 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
 
   const handleDateChange = (dates) => {
     const [start, end] = dates
+    
+    // If clicking on today as start date - immediately apply as single day range
+    if (start && !end && isToday(start)) {
+      onChange([dayjs(start), dayjs(start)])
+      setIsOpen(false)
+      return
+    }
+    
     setStartDate(start)
     setEndDate(end)
   }
@@ -74,6 +82,11 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
   // Create set of available dates for fast lookup
   const availableDateSet = new Set(availableDates)
 
+  // Check if date is today
+  const isToday = (date) => {
+    return dayjs(date).isSame(dayjs(), 'day')
+  }
+
   // Check if current range is already max
   const isMaxRange = minMaxDates && 
     dateRange[0].format('YYYY-MM-DD') === minMaxDates.min.format('YYYY-MM-DD') &&
@@ -81,8 +94,9 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
 
   const handleReset = () => {
     if (minMaxDates) {
-      setStartDate(minMaxDates.min.toDate())
-      setEndDate(minMaxDates.max.toDate())
+      // Apply full range immediately and close
+      onChange([minMaxDates.min, minMaxDates.max])
+      setIsOpen(false)
     }
   }
 
@@ -99,6 +113,13 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
     if (!availableDateSet.has(dateStr)) return
     
     const dateObj = date.toDate()
+    
+    // If clicking on today - immediately apply as single day range
+    if (isToday(date)) {
+      onChange([date, date])
+      setIsOpen(false)
+      return
+    }
     
     if (selectingStart) {
       setStartDate(dateObj)
@@ -747,11 +768,14 @@ function DateRangePicker({ dateRange, onChange, availableDates = [], usePortal =
   // Handle open
   const handleOpen = () => {
     if (isMobile) {
-      setCurrentMonth(dayjs(startDate || new Date()))
+      // Open on last date (endDate) month
+      setCurrentMonth(dayjs(endDate || new Date()))
       setSelectingStart(true)
     } else {
-      // Reset desktop month view to start date when opening
-      setDesktopMonth(dayjs(startDate || new Date()).startOf('month').toDate())
+      // Reset desktop month view to end date when opening (show latest data first)
+      // Subtract 1 month so the endDate month appears on the right side
+      const endMonth = dayjs(endDate || new Date())
+      setDesktopMonth(endMonth.subtract(1, 'month').startOf('month').toDate())
     }
     setIsOpen(true)
   }
