@@ -285,6 +285,7 @@ function Charts({ dateRange }) {
             <YAxis
               stroke="var(--text-secondary)"
               fontSize={12}
+              width={80}
               tickFormatter={(value) => formatBytes(value)}
             />
             <Tooltip
